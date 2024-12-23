@@ -300,7 +300,7 @@ CREATE TABLE IF NOT EXISTS caregiver (
 CREATE TABLE IF NOT EXISTS chartevents (
     subject_id INTEGER,
     hadm_id TEXT,
-    stay_id TEXT,
+    stay_id INTEGER,
     caregiver_id INTEGER,
     charttime DATETIME,
     storetime DATETIME,
@@ -326,7 +326,7 @@ CREATE TABLE IF NOT EXISTS d_items (
 CREATE TABLE IF NOT EXISTS datetimeevents (
     subject_id INTEGER,
     hadm_id TEXT,
-    stay_id TEXT,
+    stay_id INTEGER,
     caregiver_id TEXT,
     charttime DATETIME,
     storetime DATETIME,
@@ -339,7 +339,7 @@ CREATE TABLE IF NOT EXISTS datetimeevents (
 CREATE TABLE IF NOT EXISTS icustays (
     subject_id INTEGER,
     hadm_id TEXT,
-    stay_id TEXT,
+    stay_id INTEGER,
     first_careunit TEXT,
     last_careunit TEXT,
     intime DATETIME,
@@ -350,7 +350,7 @@ CREATE TABLE IF NOT EXISTS icustays (
 CREATE TABLE IF NOT EXISTS ingredientevents (
     subject_id INTEGER,
     hadm_id TEXT,
-    stay_id TEXT,
+    stay_id INTEGER,
     caregiver_id TEXT,
     starttime DATETIME,
     endtime DATETIME,
@@ -370,7 +370,7 @@ CREATE TABLE IF NOT EXISTS ingredientevents (
 CREATE TABLE IF NOT EXISTS inputevents (
     subject_id INTEGER,
     hadm_id TEXT,
-    stay_id TEXT,
+    stay_id INTEGER,
     caregiver_id TEXT,
     starttime DATETIME,
     endtime DATETIME,
@@ -399,7 +399,7 @@ CREATE TABLE IF NOT EXISTS inputevents (
 CREATE TABLE IF NOT EXISTS outputevents (
     subject_id INTEGER,
     hadm_id TEXT,
-    stay_id TEXT,
+    stay_id INTEGER,
     caregiver_id TEXT,
     charttime DATETIME,
     storetime DATETIME,
@@ -411,7 +411,7 @@ CREATE TABLE IF NOT EXISTS outputevents (
 CREATE TABLE IF NOT EXISTS procedureevents (
     subject_id INTEGER,
     hadm_id TEXT,
-    stay_id TEXT,
+    stay_id INTEGER,
     caregiver_id TEXT,
     starttime DATETIME,
     endtime DATETIME,
@@ -435,7 +435,7 @@ CREATE TABLE IF NOT EXISTS procedureevents (
 
 CREATE TABLE IF NOT EXISTS diagnosis (
     subject_id INTEGER,
-    stay_id TEXT,
+    stay_id INTEGER,
     seq_num INTEGER,
     icd_code TEXT,
     icd_version INTEGER,
@@ -445,7 +445,7 @@ CREATE TABLE IF NOT EXISTS diagnosis (
 CREATE TABLE IF NOT EXISTS edstays (
     subject_id INTEGER,
     hadm_id TEXT,
-    stay_id TEXT,
+    stay_id INTEGER,
     intime DATETIME,
     outtime DATETIME,
     gender TEXT,
@@ -456,7 +456,7 @@ CREATE TABLE IF NOT EXISTS edstays (
 
 CREATE TABLE IF NOT EXISTS medrecon (
     subject_id INTEGER,
-    stay_id TEXT,
+    stay_id INTEGER,
     charttime DATETIME,
     name TEXT,
     gsn TEXT,
@@ -468,7 +468,7 @@ CREATE TABLE IF NOT EXISTS medrecon (
 
 CREATE TABLE IF NOT EXISTS pyxis (
     subject_id INTEGER,
-    stay_id TEXT,
+    stay_id INTEGER,
     charttime DATETIME,
     med_rn TEXT,
     name TEXT,
@@ -478,7 +478,7 @@ CREATE TABLE IF NOT EXISTS pyxis (
 
 CREATE TABLE IF NOT EXISTS triage (
     subject_id INTEGER,
-    stay_id TEXT,
+    stay_id INTEGER,
     temperature REAL,
     heartrate REAL,
     resprate REAL,
@@ -492,7 +492,7 @@ CREATE TABLE IF NOT EXISTS triage (
 
 CREATE TABLE IF NOT EXISTS vitalsign (
     subject_id INTEGER,
-    stay_subject_id INTEGER,
+    stay_id INTEGER,
     charttime DATETIME,
     temperature REAL,
     heartrate REAL,

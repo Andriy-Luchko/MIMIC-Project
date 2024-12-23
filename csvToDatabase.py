@@ -643,9 +643,9 @@ def insert_all_data(connection):
     # This function inserts data from CSV files into the corresponding tables with chunking
     csv_paths_and_table_names = get_csv_path_and_table_names()
     chunksize = 100000  # Size of each chunk
-    ignore_set = set(["chartevents", "labevents"])
+    work_set = set(["chartevents", "labevents"])
     for csv_file_path, table_name in csv_paths_and_table_names:
-        if table_name in ignore_set:
+        if table_name not in work_set:
             continue
         # Use pd.read_csv to read the CSV in chunks
         for i, chunk in enumerate(pd.read_csv(csv_file_path, chunksize=chunksize, low_memory=False)):

@@ -18,13 +18,12 @@ def get_file_name_from_path(csv_file_path: str) -> str:
     return table_name
 
 @cache
-def get_csv_path_and_table_names() -> List[tuple]:
+def get_csv_path_and_table_names(directory_to_search) -> List[tuple]:
     '''
     Finds every csv file inside this directory and strips to its basename with no extension
     Returns a list of pairs of csv file name and the stripped name
     '''
     # Get current directory and find every csv file
-    directory_to_search = os.getcwd()
     csv_files_paths = []
     for root, _, files in os.walk(directory_to_search):
         for file in files:
@@ -93,11 +92,13 @@ def create_all_tables(connection):
         print(f"An unexpected error occurred: {e}")
     
 
-def insert_all_data(connection):
+def insert_all_data(connection, path_to_data):
     # This function inserts data from CSV files into the corresponding tables with chunking
-    csv_paths_and_table_names = get_csv_path_and_table_names()
+    csv_paths_and_table_names = get_csv_path_and_table_names(path_to_data)
     chunksize = 100000  # Size of each chunk
-    work_set = set(["discharge", "radiology"])
+    
+    # in case they rename their files or have an extra csv inside the directory - we want to make sure we are only making the tables we want
+    work_set = set(['pyxis', 'vitalsign', 'medrecon', 'triage', 'edstays', 'diagnosis', 'poe_detail', 'provider', 'pharmacy', 'emar', 'microbiologyevents', 'labevents', 'admissions', 'd_labitems', 'prescriptions', 'procedures_icd', 'poe', 'd_hcpcs', 'omr', 'transfers', 'diagnoses_icd', 'services', 'hcpcsevents', 'drgcodes', 'patients', 'd_icd_diagnoses', 'd_icd_procedures', 'emar_detail', 'd_items', 'procedureevents', 'inputevents', 'datetimeevents', 'ingredientevents', 'chartevents', 'caregiver', 'outputevents', 'icustays', 'radiology', 'discharge'])
     for csv_file_path, table_name in csv_paths_and_table_names:
         if table_name not in work_set:
             continue
@@ -106,21 +107,31 @@ def insert_all_data(connection):
             # Insert each chunk into the corresponding table
             chunk.to_sql(table_name, connection, if_exists="append", index=False)
             print(f"{i} Inserted a chunk of data into {table_name} - rows complete: ({(i + 1) * chunksize})")
+            break
         
         print(f"Inserted all data into {table_name}.")
 
-
-
-def main():
-    database_path = "./MIMIC_Database.db"
+def create_database(path_to_data):
+    database_path = "./MINI_MIMIC_Database.db"
 
     with sqlite3.connect(database_path) as connection:
-        if 0:
+        drop_all_tables(connection)
+        create_all_tables(connection)
+        insert_all_data(connection, path_to_data)
+        print("All tables processed successfully!")
+        print(f"Database made at {database_path}")
+        print(f"Data taken from {path_to_data}")
+        
+def main():
+    database_path = "./MINI_MIMIC_Database.db"
+
+    with sqlite3.connect(database_path) as connection:
+        if 1:
             drop_all_tables(connection)
-        if 0:
+        if 1:
             create_all_tables(connection)
         if 1:
-            insert_all_data(connection)
+            insert_all_data(connection, os.getcwd())
         print("All tables processed successfully!")
 
 if __name__ == "__main__":

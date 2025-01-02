@@ -2,11 +2,27 @@ import sys
 import sqlite3
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QVBoxLayout, QLineEdit, QListWidget,
-    QPushButton, QLabel, QHBoxLayout, QDialog, QDialogButtonBox, QWidget, QMessageBox
+    QPushButton, QLabel, QHBoxLayout, QDialog, QDialogButtonBox, QWidget, 
+    QMessageBox, QFileDialog
 )
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QThread, pyqtSignal
 from icdQuery import fetch_patient_data
+from csvToDatabase import create_database  # Assuming this function is in the csvToDatabase.py file
 
+
+class DatabaseCreationThread(QThread):
+    # Signal to indicate the task is done
+    task_done = pyqtSignal()
+
+    def __init__(self, path_to_data):
+        super().__init__()
+        self.path_to_data = path_to_data
+
+    def run(self):
+        # Perform the database creation task
+        create_database(self.path_to_data)
+        self.task_done.emit()  # Signal that the task is done
+        
 class ICDSearchApp(QMainWindow):
     def __init__(self, database_path):
         super().__init__()
@@ -54,6 +70,11 @@ class ICDSearchApp(QMainWindow):
 
         main_layout.addLayout(buttons_layout)
         self.central_widget.setLayout(main_layout)
+
+        # Add 'Setup' button to switch to the setup page
+        self.setup_button = QPushButton("Setup Database")
+        self.setup_button.clicked.connect(self.open_directory_dialog)
+        main_layout.addWidget(self.setup_button)
 
     def search_icd_codes(self, query):
         query = query.strip()
@@ -106,11 +127,38 @@ class ICDSearchApp(QMainWindow):
 
         # Replace this print statement with the actual database query
         print("Executing query with:", icd_codes_versions)
-        for chunk in fetch_patient_data(DATABASE_PATH, icd_codes_versions):
+        for chunk in fetch_patient_data(self.database_path, icd_codes_versions):
             for row in chunk:
                 print(row)
         QMessageBox.information(self, "Query Executed", "Query executed successfully!")
 
+    def open_directory_dialog(self):
+        directory_path = QFileDialog.getExistingDirectory(self, "Select Data Directory")
+        if directory_path:
+            self.create_loading_dialog(directory_path)
+
+    def create_loading_dialog(self, path_to_data):
+        # Create a loading dialog
+        loading_dialog = QDialog(self)
+        loading_dialog.setWindowTitle("Creating Database")
+        loading_dialog.setModal(True)  # Make the dialog modal (blocks interaction with the main window)
+
+        # Set up layout for the loading dialog
+        layout = QVBoxLayout()
+        message_label = QLabel("Creating database... Please wait.")
+        layout.addWidget(message_label)
+        
+        # You can also add a progress bar or a spinning wheel, but for simplicity, it's just a message
+        loading_dialog.setLayout(layout)
+
+        # Start the database creation process in a separate thread
+        self.db_thread = DatabaseCreationThread(path_to_data)
+        self.db_thread.task_done.connect(loading_dialog.accept)  # Close the dialog when done
+        self.db_thread.start()
+
+        # Show the loading dialog
+        loading_dialog.exec_()
+        
 if __name__ == "__main__":
     DATABASE_PATH = "MIMIC_Database.db" 
 

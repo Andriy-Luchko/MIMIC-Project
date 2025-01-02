@@ -2,8 +2,7 @@ import sys
 import sqlite3
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QVBoxLayout, QLineEdit, QListWidget,
-    QPushButton, QLabel, QHBoxLayout, QDialog, QDialogButtonBox, QWidget, 
-    QMessageBox, QFileDialog
+    QPushButton, QLabel, QHBoxLayout, QDialog, QWidget, QMessageBox, QFileDialog
 )
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
 from icdQuery import fetch_patient_data
@@ -37,14 +36,14 @@ class ICDSearchApp(QMainWindow):
         # Main layout
         main_layout = QVBoxLayout()
 
-        # Search bar
+        # Search bar for ICD codes
         self.search_bar = QLineEdit()
         self.search_bar.setPlaceholderText("Type part of ICD code or long title to search...")
         self.search_bar.textChanged.connect(self.search_icd_codes)
         main_layout.addWidget(QLabel("Search ICD Codes:"))
         main_layout.addWidget(self.search_bar)
 
-        # Search results
+        # Search results for ICD codes
         self.search_results = QListWidget()
         self.search_results.itemDoubleClicked.connect(self.add_selected_icd)
         main_layout.addWidget(QLabel("Search Results (Double-click to select):"))
@@ -69,12 +68,60 @@ class ICDSearchApp(QMainWindow):
         buttons_layout.addWidget(self.run_query_button)
 
         main_layout.addLayout(buttons_layout)
-        self.central_widget.setLayout(main_layout)
 
-        # Add 'Setup' button to switch to the setup page
+        # Setup database button
         self.setup_button = QPushButton("Setup Database")
         self.setup_button.clicked.connect(self.open_directory_dialog)
         main_layout.addWidget(self.setup_button)
+
+        # Search bar for columns
+        self.column_search_bar = QLineEdit()
+        self.column_search_bar.setPlaceholderText("Search for columns (tablename:columnname)...")
+        self.column_search_bar.textChanged.connect(self.search_columns)
+        main_layout.addWidget(QLabel("Search for Columns:"))
+        main_layout.addWidget(self.column_search_bar)
+
+        # Search results for columns
+        self.column_search_results = QListWidget()
+        self.column_search_results.itemDoubleClicked.connect(self.add_selected_column)
+        main_layout.addWidget(QLabel("Select Columns (Double-click to add):"))
+        main_layout.addWidget(self.column_search_results)
+
+        # Selected columns
+        self.selected_columns_list = QListWidget()
+        main_layout.addWidget(QLabel("Selected Columns:"))
+        main_layout.addWidget(self.selected_columns_list)
+
+        self.central_widget.setLayout(main_layout)
+
+        # Fetch available tables and columns
+        self.tables_columns = self.get_table_columns()
+
+    def get_table_columns(self):
+        """Fetch available columns for each table from the database."""
+        table_columns = {}
+
+        try:
+            conn = sqlite3.connect(self.database_path)
+            cursor = conn.cursor()
+
+            # Get the table names
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+            tables = cursor.fetchall()
+
+            for table in tables:
+                table_name = table[0]
+                # Get the column names for each table
+                cursor.execute(f"PRAGMA table_info({table_name});")
+                columns = [f"{table_name}:{column[1]}" for column in cursor.fetchall()]
+                table_columns[table_name] = columns
+
+            conn.close()
+
+        except sqlite3.Error as e:
+            QMessageBox.critical(self, "Database Error", f"An error occurred: {e}")
+
+        return table_columns
 
     def search_icd_codes(self, query):
         query = query.strip()
@@ -103,6 +150,20 @@ class ICDSearchApp(QMainWindow):
         except sqlite3.Error as e:
             QMessageBox.critical(self, "Database Error", f"An error occurred: {e}")
 
+    def search_columns(self, query):
+        """Search for columns across tables based on the input query."""
+        query = query.strip()
+        if not query:
+            self.column_search_results.clear()
+            return
+
+        matching_columns = []
+        for table, columns in self.tables_columns.items():
+            matching_columns.extend([col for col in columns if query.lower() in col.lower()])
+
+        self.column_search_results.clear()
+        self.column_search_results.addItems(matching_columns)
+
     def add_selected_icd(self, item):
         self.selected_icd_list.addItem(item.text())
 
@@ -112,6 +173,9 @@ class ICDSearchApp(QMainWindow):
             return
         for item in selected_items:
             self.selected_icd_list.takeItem(self.selected_icd_list.row(item))
+
+    def add_selected_column(self, item):
+        self.selected_columns_list.addItem(item.text())
 
     def run_query(self):
         icd_codes_versions = []
@@ -125,11 +189,21 @@ class ICDSearchApp(QMainWindow):
             QMessageBox.warning(self, "No Codes Selected", "Please add at least one ICD code before running the query.")
             return
 
-        # Replace this print statement with the actual database query
-        print("Executing query with:", icd_codes_versions)
-        for chunk in fetch_patient_data(self.database_path, icd_codes_versions):
+        # Gather selected columns
+        selected_columns = [self.selected_columns_list.item(i).text() for i in range(self.selected_columns_list.count())]
+
+        if not selected_columns:
+            QMessageBox.warning(self, "No Columns Selected", "Please select at least one column to include in the query.")
+            return
+        print("selected columns")
+        selected_columns = [item.split(":") for item in selected_columns]
+        selected_columns = [(item[0], item[1]) for item in selected_columns]
+        print(selected_columns)
+        # Execute the query
+        for chunk in fetch_patient_data(self.database_path, icd_codes_versions, selected_columns):
             for row in chunk:
                 print(row)
+
         QMessageBox.information(self, "Query Executed", "Query executed successfully!")
 
     def open_directory_dialog(self):
@@ -158,11 +232,10 @@ class ICDSearchApp(QMainWindow):
 
         # Show the loading dialog
         loading_dialog.exec_()
-        
-if __name__ == "__main__":
-    DATABASE_PATH = "MIMIC_Database.db" 
 
+
+if __name__ == "__main__":
     app = QApplication(sys.argv)
-    window = ICDSearchApp(DATABASE_PATH)
+    window = ICDSearchApp("MINI_MIMIC_Database.db")  # Replace with your database path
     window.show()
     sys.exit(app.exec_())

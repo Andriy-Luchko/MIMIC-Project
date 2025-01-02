@@ -503,3 +503,25 @@ CREATE TABLE IF NOT EXISTS vitalsign (
     rhythm TEXT,
     pain INTEGER
 );
+
+CREATE TABLE IF NOT EXISTS discharge (
+    note_id TEXT,
+    subject_id INTEGER,
+    hadm_id INTEGER,
+    note_type TEXT,
+    note_seq INTEGER,
+    charttime DATETIME,
+    storetime DATETIME,
+    text TEXT
+);
+
+CREATE TABLE IF NOT EXISTS radiology (
+    note_id TEXT,
+    subject_id INTEGER,
+    hadm_id INTEGER,
+    note_type TEXT,
+    note_seq INTEGER,
+    charttime DATETIME,
+    storetime DATETIME,
+    text TEXT
+);

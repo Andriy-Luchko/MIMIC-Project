@@ -96,6 +96,9 @@ class ICDSearchApp(QMainWindow):
 
         # Fetch available tables and columns
         self.tables_columns = self.get_table_columns()
+        print(self.tables_columns)
+        # Get additional columns
+        self.tables_columns.update(self.get_derived_table_columns())
 
     def get_table_columns(self):
         """Fetch available columns for each table from the database."""
@@ -122,6 +125,10 @@ class ICDSearchApp(QMainWindow):
             QMessageBox.critical(self, "Database Error", f"An error occurred: {e}")
 
         return table_columns
+    
+    def get_derived_table_columns(self):
+        derived = {'derived': ["derived:death_flag"]}
+        return derived
 
     def search_icd_codes(self, query):
         query = query.strip()

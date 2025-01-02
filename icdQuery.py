@@ -1,5 +1,16 @@
 import sqlite3
 
+def handle_derived_columns(query, column_pairs):
+    for table, column in column_pairs:
+        if table != "derived":
+            continue
+        
+        if column == "death_flag":
+            # Replace 'derived.deathflag' in the SELECT statement with the conditional expression
+            query = query.replace("derived.death_flag", "CASE WHEN patients.dod IS NULL THEN 0 ELSE 1 END AS deathflag")
+    
+    return query
+
 def build_select_and_joins(column_pairs):
     # Start the query with 'FROM patients'
     query = "SELECT "
@@ -53,6 +64,8 @@ def build_select_and_joins(column_pairs):
     # Get a set of all the tables used
     tables_used = set([table for table, column in column_pairs])
     
+    if "derived" in tables_used:
+        query = handle_derived_columns(query, column_pairs)
     if "patients" in tables_used:
         tables_used.remove("patients")
     

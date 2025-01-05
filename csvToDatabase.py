@@ -59,7 +59,7 @@ def drop_all_tables(connection):
     Args:
         connection (sqlite3.Connection): A connection to the SQLite database.
     """
-    sql_file_path = "./drop_tables.sql"
+    sql_file_path = "./sql_scripts/drop_tables.sql"
     try:
         with open(sql_file_path, 'r') as file:
             sql_script = file.read()
@@ -79,7 +79,7 @@ def create_all_tables(connection):
     Args:
         connection (sqlite3.Connection): A connection to the SQLite database.
     """
-    sql_file_path = "./create_tables.sql"
+    sql_file_path = "./sql_scripts/create_tables.sql"
     try:
         with open(sql_file_path, 'r') as file:
             sql_script = file.read()
@@ -99,6 +99,7 @@ def insert_all_data(connection, path_to_data):
     
     # in case they rename their files or have an extra csv inside the directory - we want to make sure we are only making the tables we want
     work_set = set(['pyxis', 'vitalsign', 'medrecon', 'triage', 'edstays', 'diagnosis', 'poe_detail', 'provider', 'pharmacy', 'emar', 'microbiologyevents', 'labevents', 'admissions', 'd_labitems', 'prescriptions', 'procedures_icd', 'poe', 'd_hcpcs', 'omr', 'transfers', 'diagnoses_icd', 'services', 'hcpcsevents', 'drgcodes', 'patients', 'd_icd_diagnoses', 'd_icd_procedures', 'emar_detail', 'd_items', 'procedureevents', 'inputevents', 'datetimeevents', 'ingredientevents', 'chartevents', 'caregiver', 'outputevents', 'icustays', 'radiology', 'discharge'])
+    
     for csv_file_path, table_name in csv_paths_and_table_names:
         if table_name not in work_set:
             continue
@@ -119,6 +120,7 @@ def create_database(path_to_data):
         create_all_tables(connection)
         insert_all_data(connection, path_to_data)
         split_omr(connection)
+        rename_stay_id_columns(connection)
         print("All tables processed successfully!")
         print(f"Database made at {database_path}")
         print(f"Data taken from {path_to_data}")
@@ -130,7 +132,7 @@ def split_omr(connection):
     Args:
         connection (sqlite3.Connection): A connection to the SQLite database.
     """
-    sql_file_path = "./split_omr.sql"
+    sql_file_path = "./sql_scripts/split_omr.sql"
     try:
         with open(sql_file_path, 'r') as file:
             sql_script = file.read()
@@ -142,19 +144,40 @@ def split_omr(connection):
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
 
-    
+def rename_stay_id_columns(connection):
+    """
+    Reads the SQL commands from rename_stay_id.sql and executes them to rename stay_id columns.
+
+    Args:
+        connection (sqlite3.Connection): A connection to the SQLite database.
+    """
+    sql_file_path = "./sql_scripts/rename_stay_id.sql"
+    try:
+        with open(sql_file_path, 'r') as file:
+            sql_script = file.read()
+        print("Executing RENAME STAY_ID script.")
+        execute_script(connection, sql_script)
+        print("Stay ID columns renamed successfully.")
+    except FileNotFoundError:
+        print(f"Error: The file {sql_file_path} was not found.")
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        
 def main():
-    database_path = "./MIMIC_Database.db"
+    database_path = "./MINI_MIMIC_Database.db"
 
     with sqlite3.connect(database_path) as connection:
-        if 0:
+        if 1:
             drop_all_tables(connection)
         if 1:
             create_all_tables(connection)
-        if 0:
+        if 1:
             insert_all_data(connection, os.getcwd())
         if 1:
-            split_omr(connection)  
+            split_omr(connection)
+        if 1:
+            rename_stay_id_columns(connection)
+            
         print("All tables processed successfully!")
 
 if __name__ == "__main__":

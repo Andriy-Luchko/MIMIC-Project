@@ -100,10 +100,6 @@ def insert_all_data(connection, path_to_data):
     # in case they rename their files or have an extra csv inside the directory - we want to make sure we are only making the tables we want
     work_set = set(['pyxis', 'vitalsign', 'medrecon', 'triage', 'edstays', 'diagnosis', 'poe_detail', 'provider', 'pharmacy', 'emar', 'microbiologyevents', 'labevents', 'admissions', 'd_labitems', 'prescriptions', 'procedures_icd', 'poe', 'd_hcpcs', 'omr', 'transfers', 'diagnoses_icd', 'services', 'hcpcsevents', 'drgcodes', 'patients', 'd_icd_diagnoses', 'd_icd_procedures', 'emar_detail', 'd_items', 'procedureevents', 'inputevents', 'datetimeevents', 'ingredientevents', 'chartevents', 'caregiver', 'outputevents', 'icustays', 'radiology', 'discharge'])
     
-    # ICU and ED files have a stay_id which is used to reference other things in ICU/ED files we want to rename it to icu_stay_id and ed_stay_id respectively
-    icu_set = set(["chartevents", "datetimeevents", "icustays", "ingredientevents", "inputevents", "outputevents", "procedureevents"])
-    ed_set = set(["diagnosis", "edstays", "medrecon", "pyxis", "triage", "vitalsign"])
-    
     for csv_file_path, table_name in csv_paths_and_table_names:
         if table_name not in work_set:
             continue

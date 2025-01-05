@@ -525,3 +525,79 @@ CREATE TABLE IF NOT EXISTS radiology (
     storetime DATETIME,
     text TEXT
 );
+
+CREATE TABLE IF NOT EXISTS patient_weight (
+    subject_id INTEGER,
+    chartdate DATE,
+    seq_num INTEGER,
+    weight_lbs REAL
+);
+
+CREATE TABLE IF NOT EXISTS patient_bmi (
+    subject_id INTEGER,
+    chartdate DATE,
+    seq_num INTEGER,
+    bmi_value REAL
+);
+
+CREATE TABLE IF NOT EXISTS patient_height (
+    subject_id INTEGER,
+    chartdate DATE,
+    seq_num INTEGER,
+    height_inches REAL
+);
+
+CREATE TABLE IF NOT EXISTS patient_eGFR (
+    subject_id INTEGER,
+    chartdate DATE,
+    seq_num INTEGER,
+    eGFR REAL
+);
+
+CREATE TABLE IF NOT EXISTS patient_blood_pressure (
+    subject_id INTEGER,
+    chartdate DATE,
+    seq_num INTEGER,
+    systolic INTEGER,
+    diastolic INTEGER
+);
+
+CREATE TABLE IF NOT EXISTS patient_blood_pressure_sitting (
+    subject_id INTEGER,
+    chartdate DATE,
+    seq_num INTEGER,
+    systolic INTEGER,
+    diastolic INTEGER
+);
+
+CREATE TABLE IF NOT EXISTS patient_blood_pressure_standing_1min (
+    subject_id INTEGER,
+    chartdate DATE,
+    seq_num INTEGER,
+    systolic INTEGER,
+    diastolic INTEGER
+);
+
+CREATE TABLE IF NOT EXISTS patient_blood_pressure_standing_3mins (
+    subject_id INTEGER,
+    chartdate DATE,
+    seq_num INTEGER,
+    systolic INTEGER,
+    diastolic INTEGER
+);
+
+CREATE TABLE IF NOT EXISTS patient_blood_pressure_standing (
+    subject_id INTEGER,
+    chartdate DATE,
+    seq_num INTEGER,
+    systolic INTEGER,
+    diastolic INTEGER
+);
+
+CREATE TABLE IF NOT EXISTS patient_blood_pressure_lying (
+    subject_id INTEGER,
+    chartdate DATE,
+    seq_num INTEGER,
+    systolic INTEGER,
+    diastolic INTEGER
+);

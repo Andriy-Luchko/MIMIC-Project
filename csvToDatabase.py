@@ -118,20 +118,43 @@ def create_database(path_to_data):
         drop_all_tables(connection)
         create_all_tables(connection)
         insert_all_data(connection, path_to_data)
+        split_omr(connection)
         print("All tables processed successfully!")
         print(f"Database made at {database_path}")
         print(f"Data taken from {path_to_data}")
-        
+
+def split_omr(connection):
+    """
+    Reads the SQL commands from split_omr.sql and executes them to split the OMR table data into separate tables.
+
+    Args:
+        connection (sqlite3.Connection): A connection to the SQLite database.
+    """
+    sql_file_path = "./split_omr.sql"
+    try:
+        with open(sql_file_path, 'r') as file:
+            sql_script = file.read()
+        print("Executing SPLIT OMR script.")
+        execute_script(connection, sql_script)
+        print("OMR table split successfully.")
+    except FileNotFoundError:
+        print(f"Error: The file {sql_file_path} was not found.")
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+
+    
 def main():
-    database_path = "./MINI_MIMIC_Database.db"
+    database_path = "./MIMIC_Database.db"
 
     with sqlite3.connect(database_path) as connection:
-        if 1:
+        if 0:
             drop_all_tables(connection)
         if 1:
             create_all_tables(connection)
-        if 1:
+        if 0:
             insert_all_data(connection, os.getcwd())
+        if 1:
+            split_omr(connection)  
         print("All tables processed successfully!")
 
 if __name__ == "__main__":

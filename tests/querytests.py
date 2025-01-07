@@ -14,11 +14,15 @@ class QueryTests(unittest.TestCase):
         # Create a query with just one subquery
         main_query = Query(queries=[query1], union_or_intersect="UNION")
 
-        expected_query = """SELECT 
+        expected_query = """SELECT
 patients.subject_id,
-admissions.race FROM patients, admissions WHERE 
-patients.subject_id = admissions.subject_id AND
-(patients.anchor_age BETWEEN 30 AND 50 AND
+admissions.race
+FROM patients, admissions
+WHERE
+patients.subject_id = admissions.subject_id
+AND
+(patients.anchor_age BETWEEN 30 AND 50
+AND
 admissions.race = 'WHITE')"""
 
         self.assertEqual(main_query.build_query(), expected_query)
@@ -36,8 +40,23 @@ admissions.race = 'WHITE')"""
 
         intersect_query = Query(queries=[subquery1, subquery2], union_or_intersect="INTERSECT")
 
-        expected_query = "SELECT patients.subject_id, admissions.race FROM patients, admissions WHERE (patients.anchor_age BETWEEN 50 AND 80) INTERSECT SELECT patients.subject_id, admissions.race FROM patients, admissions WHERE (admissions.race = 'WHITE')"
-
+        expected_query = """SELECT
+patients.subject_id,
+admissions.race
+FROM patients, admissions
+WHERE
+patients.subject_id = admissions.subject_id
+AND
+(patients.anchor_age BETWEEN 50 AND 80)
+INTERSECT
+SELECT
+patients.subject_id,
+admissions.race
+FROM patients, admissions
+WHERE
+patients.subject_id = admissions.subject_id
+AND
+(admissions.race = 'WHITE')"""
         self.assertEqual(intersect_query.build_query(), expected_query)
 
     def test_union_query(self):
@@ -53,12 +72,18 @@ admissions.race = 'WHITE')"""
 
         union_query = Query(queries=[subquery1, subquery2], union_or_intersect="UNION")
 
-        expected_query = """SELECT 
-patients.subject_id FROM patients WHERE 
+        expected_query = """SELECT
+patients.subject_id,
+patients.anchor_age
+FROM patients
+WHERE
 (patients.anchor_age BETWEEN 0 AND 18)
 UNION
-SELECT 
-patients.subject_id FROM patients WHERE 
+SELECT
+patients.subject_id,
+patients.anchor_age
+FROM patients
+WHERE
 (patients.anchor_age BETWEEN 65 AND 120)"""
 
         self.assertEqual(union_query.build_query(), expected_query)

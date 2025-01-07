@@ -22,12 +22,12 @@ class DatabaseCreationThread(QThread):
         create_database(self.path_to_data)
         self.task_done.emit()  # Signal that the task is done
         
-class ICDSearchApp(QMainWindow):
+class MIMICApp(QMainWindow):
     def __init__(self, database_path):
         super().__init__()
         self.database_path = database_path
         self.setWindowTitle("ICD Code Selector with Autocomplete")
-        self.setGeometry(100, 100, 800, 600)
+        self.setGeometry(100, 100, 1200, 900)
 
         # Central widget
         self.central_widget = QWidget()
@@ -243,6 +243,6 @@ class ICDSearchApp(QMainWindow):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    window = ICDSearchApp("MINI_MIMIC_Database.db")  # Replace with your database path
+    window = MIMICApp("MINI_MIMIC_Database.db")
     window.show()
     sys.exit(app.exec_())

@@ -167,13 +167,13 @@ def main():
     database_path = "./MINI_MIMIC_Database.db"
 
     with sqlite3.connect(database_path) as connection:
-        if 1:
+        if 0:
             drop_all_tables(connection)
-        if 1:
+        if 0:
             create_all_tables(connection)
-        if 1:
+        if 0:
             insert_all_data(connection, os.getcwd())
-        if 1:
+        if 0:
             split_omr(connection)
         if 1:
             rename_stay_id_columns(connection)

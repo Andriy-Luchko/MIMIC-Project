@@ -81,13 +81,13 @@ class Subquery:
             self.recursive_join(table_name, from_tables, where_conditions, visited_tables)
 
         filter_conditions = [Filter.filter_tuple_to_sql(filter_tuple) for filter_tuple in self.filters]
-        final_filter = f"({f" {self.filter_combination}\n".join(filter_conditions)})"
+        final_filter = f"({f"\n{self.filter_combination}\n".join(filter_conditions)})"
         where_conditions.append(final_filter)
 
-        query = f"SELECT \n{self.get_select_columns()} FROM " + ", ".join(from_tables)
+        query = f"SELECT\n{self.get_select_columns()}\nFROM " + ", ".join(from_tables) + "\n"
         if where_conditions:
-            query += f" WHERE \n" + f" {self.filter_combination}\n".join(where_conditions)
-
+            query += f"WHERE\n" + f"\nAND\n".join(where_conditions)
+        print(query)
         return query
         
     # The starting table for the subquery, representing patients.

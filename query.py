@@ -24,7 +24,10 @@ class Query:
 
         :return: A string representing the combined query.
         """
-        return f"\n{self.union_or_intersect}\n".join([query.build_query() for query in self.queries])
+        if len(self.queries) == 1:
+            return self.queries[0].build_query()
+        
+        return f"\n{self.union_or_intersect}\n".join(["SELECT * FROM (\n" + query.build_query() + "\n)" for query in self.queries])
 
     def build_query(self):
         """

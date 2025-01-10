@@ -1,6 +1,9 @@
 import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget
 from createDatabaseButton import create_database_button
+from filterSearchBar import FilterSearchBar
+from returnColumnSearchBar import ReturnColumnSearchBar
+import sqlite3
 
 
 class MainWindow(QMainWindow):
@@ -13,15 +16,30 @@ class MainWindow(QMainWindow):
         self.central_widget = QWidget(self)
         self.setCentralWidget(self.central_widget)
 
+        # Create and set up the database connection (this is where your db connection should come from)
+        self.db_connection = sqlite3.connect("MINI_MIMIC_Database.db")
+
         # Main layout
         main_layout = QVBoxLayout()
 
-        # Add the database setup button
+        # Add the filter search bar to the layout
+        self.filter_search_bar = FilterSearchBar(self)
+        main_layout.addWidget(self.filter_search_bar)
+
+        # Add the return column search bar to the layout
+        self.return_column_search_bar = ReturnColumnSearchBar(self.db_connection)
+        main_layout.addWidget(self.return_column_search_bar)
+
+        # Add the setup button to the layout
         self.setup_button = create_database_button(self)
         main_layout.addWidget(self.setup_button)
 
         # Set the layout to the central widget
         self.central_widget.setLayout(main_layout)
+
+    def closeEvent(self, event):
+        # Ensure to close the database connection when the app is closed
+        self.db_connection.close()
 
 
 def main():

@@ -251,45 +251,56 @@ AND
         # Combine the two subqueries with a UNION
         main_query = Query(queries=[query1, query2], union_or_intersect="INTERSECT")
 
-        expected_query = """SELECT
+        expected_query = """SELECT * FROM (
+SELECT
 patients.subject_id,
-admissions.hadm_id
-FROM patients, admissions
+admissions.hadm_id,
+patient_blood_pressure.systolic
+FROM patients, admissions, patient_blood_pressure
 WHERE
 patients.subject_id = admissions.subject_id
 AND
-admissions.hadm_id IN
-(
-    SELECT * FROM (
-        SELECT a.hadm_id
-        FROM admissions a
-        JOIN admissions a2
-        WHERE CAST((julianday(a2.admittime) - julianday(a.admittime)) AS REAL) < 30
-        AND CAST((julianday(a2.admittime) - julianday(a.admittime)) AS REAL) > 0
-        AND a.hadm_id != a2.hadm_id
-        AND a.subject_id = a2.subject_id
-    UNION
-        SELECT a.hadm_id
-        FROM admissions a
-        JOIN admissions a2
-        WHERE CAST((julianday(a.admittime) - julianday(a2.admittime)) AS REAL) < 30
-        AND CAST((julianday(a.admittime) - julianday(a2.admittime)) AS REAL) > 0
-        AND a.hadm_id != a2.hadm_id
-        AND a.subject_id = a2.subject_id
-    )
-)
-UNION
-SELECT
-patients.subject_id,
-patient_blood_pressure.systolic
-FROM patients, patient_blood_pressure
-WHERE
 patients.subject_id = patient_blood_pressure.subject_id
 AND
-patient_blood_pressure.systolic BETWEEN 150 AND 1e999"""
+(admissions.hadm_id IN
+(
+	SELECT * FROM (
+		SELECT a.hadm_id
+		FROM admissions a
+		JOIN admissions a2
+		WHERE CAST((julianday(a2.admittime) - julianday(a.admittime)) AS REAL) < 30
+		AND CAST((julianday(a2.admittime) - julianday(a.admittime)) AS REAL) > 0
+		AND a.hadm_id != a2.hadm_id
+		AND a.subject_id = a2.subject_id
+	UNION
+		SELECT a.hadm_id
+		FROM admissions a
+		JOIN admissions a2
+		WHERE CAST((julianday(a.admittime) - julianday(a2.admittime)) AS REAL) < 30
+		AND CAST((julianday(a.admittime) - julianday(a2.admittime)) AS REAL) > 0
+		AND a.hadm_id != a2.hadm_id
+		AND a.subject_id = a2.subject_id
+	)
+)
+)
+)
+INTERSECT
+SELECT * FROM (
+SELECT
+patients.subject_id,
+admissions.hadm_id,
+patient_blood_pressure.systolic
+FROM patients, admissions, patient_blood_pressure
+WHERE
+patients.subject_id = admissions.subject_id
+AND
+patients.subject_id = patient_blood_pressure.subject_id
+AND
+(patient_blood_pressure.systolic BETWEEN 150 AND 1e999)
+)"""
 
-        print(main_query.build_query())
-        # self.assertEqual(main_query.build_query(), expected_query)
+        # print(main_query.build_query())
+        self.assertEqual(main_query.build_query(), expected_query)
 
 
 if __name__ == "__main__":

@@ -1,8 +1,10 @@
 from PyQt5.QtWidgets import (
     QLineEdit,
     QVBoxLayout,
+    QHBoxLayout,
     QWidget,
     QListView,
+    QLabel,
 )
 from PyQt5.QtCore import Qt, QAbstractListModel, QVariant
 
@@ -31,19 +33,39 @@ class ReturnColumnSearchBar(QWidget):
         self.selected_columns = []  # List of selected columns to display
 
         # Set up the UI components
-        self.layout = QVBoxLayout(self)
+        self.main_layout = QHBoxLayout(self)  # Main horizontal layout
+        self.layout_left = QVBoxLayout()  # Layout for search bar and results
+        self.layout_right = QVBoxLayout()  # Layout for selected columns
+
+        # Set the left layout to have no margins or spacing
+        self.layout_left.setContentsMargins(0, 0, 0, 0)
+        self.layout_left.setSpacing(0)
+
+        # Title for Return Column Search Bar
+        self.return_column_title = QLabel("Return Column Search", self)
+        self.return_column_title.setStyleSheet("font-size: 18px; font-weight: bold;")
+        self.layout_left.addWidget(
+            self.return_column_title
+        )  # Add title above the search bar
 
         # Search bar (QLineEdit)
         self.search_bar = QLineEdit(self)
         self.search_bar.setPlaceholderText(placeholder_text)
-        self.layout.addWidget(self.search_bar)
+        self.layout_left.addWidget(self.search_bar)
 
         # Use QListView to display search results
         self.list_view = QListView(self)
-        self.layout.addWidget(self.list_view)
+        self.layout_left.addWidget(self.list_view)
 
-        # Set the list view to hide initially
-        self.list_view.setVisible(False)
+        # Make sure the list view doesn't have extra margins or space above it
+        self.list_view.setSpacing(0)
+        self.list_view.setContentsMargins(0, 0, 0, 0)
+
+        # Set the list view to show by default, even if empty
+        self.list_view.setVisible(True)
+
+        # Set the list view to a fixed height (adjust as needed)
+        self.list_view.setFixedHeight(187)
 
         # Create a model for search results
         self.model = ColumnListModel(self.table_column_pairs)
@@ -54,12 +76,24 @@ class ReturnColumnSearchBar(QWidget):
         self.selected_list_view = QListView(self)
         self.selected_list_view.setModel(self.selected_model)
 
-        # Create a layout for selected columns
-        self.selected_layout = QVBoxLayout()
-        self.selected_layout.addWidget(self.selected_list_view)
+        # Title for Current Return Columns
+        self.current_return_columns_title = QLabel("Current Return Columns", self)
+        self.current_return_columns_title.setStyleSheet(
+            "font-size: 18px; font-weight: bold;"
+        )
+        self.layout_right.addWidget(
+            self.current_return_columns_title
+        )  # Add title above the selected columns list
 
-        # Add the selected columns list below the search bar
-        self.layout.addLayout(self.selected_layout)
+        # Add the selected columns list to the right layout
+        self.layout_right.addWidget(self.selected_list_view)
+
+        # Set fixed height for the selected columns list (adjust as needed)
+        self.selected_list_view.setFixedHeight(200)
+
+        # Add both left and right layouts to the main horizontal layout
+        self.main_layout.addLayout(self.layout_left)  # Search bar and results
+        self.main_layout.addLayout(self.layout_right)  # Selected columns
 
         # Load tables and columns from the database
         self.load_tables_and_columns()
@@ -92,7 +126,12 @@ class ReturnColumnSearchBar(QWidget):
         # Initialize the filtered list (starts as a copy of the original columns)
         self.table_column_pairs = self.original_columns[:]
 
-        # Refresh the model after loading data
+        # Ensure the list view is always visible, even when empty
+        self.list_view.setVisible(True)
+
+        # Refresh the model after loading data and ensure the list is populated
+        self.model = ColumnListModel(self.table_column_pairs)
+        self.list_view.setModel(self.model)
         self.model.layoutChanged.emit()
 
     def update_list_view(self):
@@ -113,8 +152,12 @@ class ReturnColumnSearchBar(QWidget):
                 self.model.layoutChanged.emit()
                 self.list_view.setVisible(True)
             else:
-                # Hide the list view if no matches
-                self.list_view.setVisible(False)
+                # Show the list view even if no matches
+                self.table_column_pairs = []
+                self.model = ColumnListModel(self.table_column_pairs)
+                self.list_view.setModel(self.model)
+                self.model.layoutChanged.emit()
+                self.list_view.setVisible(True)
         else:
             # When search bar is empty, reset to show all items
             self.table_column_pairs = self.original_columns[:]

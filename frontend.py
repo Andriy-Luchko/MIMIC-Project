@@ -1,5 +1,5 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget
+from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QLabel
 from createDatabaseButton import create_database_button
 from filterSearchBar import FilterSearchBar
 from returnColumnSearchBar import ReturnColumnSearchBar
@@ -22,13 +22,14 @@ class MainWindow(QMainWindow):
         # Main layout
         main_layout = QVBoxLayout()
 
-        # Add the filter search bar to the layout
-        self.filter_search_bar = FilterSearchBar(self)
-        main_layout.addWidget(self.filter_search_bar)
-
         # Add the return column search bar to the layout
         self.return_column_search_bar = ReturnColumnSearchBar(self.db_connection)
         main_layout.addWidget(self.return_column_search_bar)
+        self.return_column_search_bar.setFixedHeight(250)  # Set your desired height
+
+        # Add the filter search bar to the layout
+        self.filter_search_bar = FilterSearchBar(self)
+        main_layout.addWidget(self.filter_search_bar)
 
         # Add the setup button to the layout
         self.setup_button = create_database_button(self)

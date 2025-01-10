@@ -17,7 +17,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.central_widget)
 
         # Create and set up the database connection (this is where your db connection should come from)
-        self.db_connection = sqlite3.connect("MINI_MIMIC_Database.db")
+        self.db_connection = sqlite3.connect("MIMIC_Database.db")
 
         # Main layout
         main_layout = QVBoxLayout()
@@ -28,9 +28,9 @@ class MainWindow(QMainWindow):
         self.return_column_search_bar.setFixedHeight(250)  # Set your desired height
 
         # Add the filter search bar to the layout
-        self.filter_search_bar = FilterSearchBar(self)
+        self.filter_search_bar = FilterSearchBar(self.db_connection)
         main_layout.addWidget(self.filter_search_bar)
-
+        self.filter_search_bar.setFixedHeight(250)  # Set your desired height
         # Add the setup button to the layout
         self.setup_button = create_database_button(self)
         main_layout.addWidget(self.setup_button)

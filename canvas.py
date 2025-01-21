@@ -57,7 +57,14 @@ class Canvas(QWidget):
         new_label.move(position)
         new_label.show()
         self.items.append(new_label)
-
+        
+    def add_filter_item(self, label):
+        new_label = DraggableItem(label, self.canvas_area)  # Label as AND
+        position = self.find_available_position(new_label)
+        new_label.move(position)
+        new_label.show()
+        self.items.append(new_label)
+        
     def find_available_position(self, new_item):
         """Find an available position that doesn't intersect with existing items."""
         spacing = 20  # Minimum spacing between items

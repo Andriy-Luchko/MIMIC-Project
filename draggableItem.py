@@ -1,15 +1,28 @@
 from PyQt5.QtWidgets import QLabel
 from PyQt5.QtCore import Qt, QPoint, QRect
+from PyQt5.QtGui import QFontMetrics
 
 class DraggableItem(QLabel):
     def __init__(self, text, parent=None):
         super().__init__(text, parent)
         self.setText(text)
         self.setStyleSheet("background-color: white; border: 1px solid black; padding: 5px; color: black;")
-        self.setFixedSize(100, 50)
+        
+        # Adjust the size of the label based on the text length
+        self.adjust_size_based_on_text(text)
+        
         self.dragging = False
         self.offset = QPoint()
         self.show()
+
+    def adjust_size_based_on_text(self, text):
+        """ Adjust the size of the label based on the text length """
+        font_metrics = QFontMetrics(self.font())  # Get font metrics for the current font
+        text_width = font_metrics.horizontalAdvance(text) + 5 # Calculate the width of the text
+        text_height = font_metrics.height()  # Calculate the height of the text
+        
+        # Add padding and set the label size accordingly
+        self.setFixedSize(text_width + 10, text_height + 10)  # Add padding for better visual
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:

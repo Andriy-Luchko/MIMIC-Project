@@ -39,6 +39,7 @@ class MainWindow(QMainWindow):
         # Add the canvas to the layout
         self.draggable_canvas = Canvas()
         main_layout.addWidget(self.draggable_canvas)
+        self.filter_search_bar.canvas = self.draggable_canvas
         
         # Set the layout to the central widget
         self.central_widget.setLayout(main_layout)

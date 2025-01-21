@@ -63,6 +63,10 @@ class FilterSearchBar(QWidget):
         else:
             filtered_items = self.items  # Show all items if the search bar is empty
 
+        # Limit the number of items displayed in the list (e.g., show a maximum of 5 items)
+        max_items_to_show = 25
+        filtered_items = filtered_items[:max_items_to_show]
+
         # Update the list view with the filtered items
         self.model = FilterListModel(filtered_items)
         self.list_view.setModel(self.model)

@@ -37,9 +37,7 @@ class FilterSearchBar(QWidget):
         # Create the list view to show the dropdown results
         self.list_view = QListView(self)
         self.list_view.setVisible(True)  # Always show the list view
-        self.list_view.setFixedHeight(
-            200
-        )  # Set a fixed height for the list view (limit the results shown)
+        self.list_view.setFixedHeight(200)  # Set a fixed height for the list view
         layout.addWidget(self.list_view)
 
         # Fetch admission types from the database using the updated helper function
@@ -50,6 +48,9 @@ class FilterSearchBar(QWidget):
 
         # Connect the textChanged signal to update the list view based on search text
         self.search_bar.textChanged.connect(self.update_list_view)
+
+        # Connect the itemClicked signal to handle item selection
+        self.list_view.clicked.connect(self.on_item_clicked)
 
     def update_list_view(self):
         # Get the current search text
@@ -63,7 +64,23 @@ class FilterSearchBar(QWidget):
         else:
             filtered_items = self.items  # Show all items if the search bar is empty
 
+        # Limit the number of items displayed in the list (e.g., show a maximum of 25 items)
+        max_items_to_show = 25
+        filtered_items = filtered_items[:max_items_to_show]
+
         # Update the list view with the filtered items
         self.model = FilterListModel(filtered_items)
         self.list_view.setModel(self.model)
         self.model.layoutChanged.emit()  # Notify the view that the model has changed
+
+    def on_item_clicked(self, index):
+        """Handle the item click and add it to the canvas."""
+        selected_item = self.model.data(index, Qt.DisplayRole)
+        
+        # Ensure the selected item is a string
+        selected_item_str = selected_item.value() if isinstance(selected_item, QVariant) else str(selected_item)
+        
+        # Assuming canvas already has add_filter_item method to add a filter item
+        self.canvas.add_filter_item(selected_item_str)  # Add filter item to canvas
+
+

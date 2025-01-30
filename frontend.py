@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QLa
 from createDatabaseButton import create_database_button
 from filterSearchBar import FilterSearchBar
 from returnColumnSearchBar import ReturnColumnSearchBar
+from canvas import Canvas
 import sqlite3
 
 
@@ -17,7 +18,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.central_widget)
 
         # Create and set up the database connection (this is where your db connection should come from)
-        self.db_connection = sqlite3.connect("MIMIC_Database.db")
+        self.db_connection = sqlite3.connect("MINI_MIMIC_Database.db")
 
         # Main layout
         main_layout = QVBoxLayout()
@@ -25,16 +26,21 @@ class MainWindow(QMainWindow):
         # Add the return column search bar to the layout
         self.return_column_search_bar = ReturnColumnSearchBar(self.db_connection)
         main_layout.addWidget(self.return_column_search_bar)
-        self.return_column_search_bar.setFixedHeight(250)  # Set your desired height
+        self.return_column_search_bar.setFixedHeight(250)
 
         # Add the filter search bar to the layout
         self.filter_search_bar = FilterSearchBar(self.db_connection)
         main_layout.addWidget(self.filter_search_bar)
-        self.filter_search_bar.setFixedHeight(250)  # Set your desired height
+        self.filter_search_bar.setFixedHeight(250)
         # Add the setup button to the layout
         self.setup_button = create_database_button(self)
         main_layout.addWidget(self.setup_button)
 
+        # Add the canvas to the layout
+        self.draggable_canvas = Canvas()
+        main_layout.addWidget(self.draggable_canvas)
+        self.filter_search_bar.canvas = self.draggable_canvas
+        
         # Set the layout to the central widget
         self.central_widget.setLayout(main_layout)
 

@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QLineEdit, QVBoxLayout, QLabel, QWidget, QListView
 from PyQt5.QtCore import Qt, QAbstractListModel, QVariant
-from frontendFilterHelpers import fetch_unique_values
+from frontendFilterHelpers import fetch_unique_values, get_range_filters
 
 
 class FilterListModel(QAbstractListModel):
@@ -40,9 +40,9 @@ class FilterSearchBar(QWidget):
         self.list_view.setFixedHeight(200)  # Set a fixed height for the list view
         layout.addWidget(self.list_view)
 
-        # Fetch admission types from the database using the updated helper function
+        # Fetch unique values from the database for filtering 
         self.items = fetch_unique_values(db_connection)
-
+        self.items.extend(get_range_filters())
         self.model = FilterListModel(self.items)
         self.list_view.setModel(self.model)
 
@@ -82,5 +82,4 @@ class FilterSearchBar(QWidget):
         
         # Assuming canvas already has add_filter_item method to add a filter item
         self.canvas.add_filter_item(selected_item_str)  # Add filter item to canvas
-
-
+        

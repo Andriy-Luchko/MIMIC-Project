@@ -49,5 +49,37 @@ def fetch_unique_values(db_connection):
             # Unpack the values into the format: table_name - column_name - value
             for value in column_values:
                 all_values.append(value)  # value is already in the correct format
-
     return all_values
+
+def get_range_filters():
+    range_filters = ["patients - anchor_age - range", 
+                     "triage - temperature - range",
+                     "triage - heartrate - range",
+                     "triage - resprate - range",
+                     "triage - o2sat - range",
+                     "triage - sbp - range",
+                     "triage - dbp - range",
+                     "triage - acuity - range",
+                     "vitalsign - temperature - range",
+                     "vitalsign - heartrate - range",
+                     "vitalsign - resprate - range",
+                     "vitalsign - o2sat - range",
+                     "vitalsign - sbp - range",
+                     "vitalsign - dbp - range",
+                     "patient_blood_pressure - systolic - range",
+                     "patient_blood_pressure - diastolic - range",
+                     "patient_blood_pressure_lying - systolic - range",
+                     "patient_blood_pressure_lying - diastolic - range",
+                     "patient_blood_pressure_sitting - systolic - range",
+                     "patient_blood_pressure_sitting - diastolic - range",
+                     "patient_blood_pressure_standing - systolic - range",
+                     "patient_blood_pressure_standing - diastolic - range",
+                     "patient_blood_pressure_standing_1min - systolic - range",
+                     "patient_blood_pressure_standing_1min - diastolic - range",
+                     "patient_blood_pressure_standing3mins - systolic - range",
+                     "patient_blood_pressure_standing3mins - diastolic - range",
+                     "patient_bmi - bmi_value - range",
+                     "patient_eGFR - eGFR - range",
+                     "patient_height - height_inches - range",
+                     "patient_weight - weight_lbs - range",]
+    return range_filters

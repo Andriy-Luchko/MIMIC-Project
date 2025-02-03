@@ -122,7 +122,8 @@ class Canvas(QWidget):
         return QPoint(50, 50)
     
     def add_filter_item(self, label):
-        new_label = DraggableItem(label, self, self.canvas_area)  # Label as AND
+        is_range = label.endswith("range")
+        new_label = DraggableItem(label, self, self.canvas_area, is_range=is_range)
         position = self.find_available_position(new_label)
         new_label.move(position)
         new_label.show()

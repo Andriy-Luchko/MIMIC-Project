@@ -7,7 +7,7 @@ class DraggableItem(QLabel):
         super().__init__(text, parent)
         self.is_range = is_range
         self.setText(text)
-        self.setStyleSheet("background-color: white; border: 1px solid black; padding: 5px; color: black;")
+        self.setStyleSheet("background-color: white; border: 1px solid black; padding: 0px; color: black;")
 
         self.adjust_size_based_on_text(text)
         self.dragging = False

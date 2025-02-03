@@ -2,6 +2,7 @@ from PyQt5.QtWidgets import QWidget, QPushButton, QVBoxLayout, QHBoxLayout, QSiz
 from PyQt5.QtGui import QPainter, QPen, QPolygon
 from PyQt5.QtCore import Qt, QPoint, QRect
 from draggableItem import DraggableItem
+from PyQt5.QtCore import Qt
 
 class Canvas(QWidget):
     def __init__(self, parent=None):
@@ -54,15 +55,32 @@ class Canvas(QWidget):
         self.canvas_area.setStyleSheet("background-color: white; border: 2px solid #555;")  # Ensure canvas area background is white
         self.canvas_area.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)  # Make it expand
         self.layout.addWidget(self.canvas_area, stretch=1)  # Add with stretch factor to take up available space
-    
-        
+
+        # Set default cursor
+        self.setCursor(Qt.ArrowCursor)
+
     def toggle_delete_mode(self):
         """Toggle delete mode when the button is pressed"""
         self.delete_mode = not self.delete_mode
         if self.delete_mode:
             print("Delete mode activated")
+            self.setCursor(Qt.ForbiddenCursor)  # Change cursor to "forbidden" (🚫)
+            self.connection_mode = False  # Ensure connection mode is off
         else:
             print("Delete mode deactivated")
+            self.setCursor(Qt.ArrowCursor)  # Reset to default cursor
+
+    def toggle_connection_mode(self):
+        """Toggle connection mode when the button is pressed"""
+        self.connection_mode = not self.connection_mode
+        if self.connection_mode:
+            print("Connection mode activated")
+            self.setCursor(Qt.CrossCursor)  # Change cursor to "cross" (➕)
+            self.delete_mode = False  # Ensure delete mode is off
+        else:
+            print("Connection mode deactivated")
+            self.setCursor(Qt.ArrowCursor)  # Reset to default cursor
+            self.selected_item = None  # Reset selection if exiting mode
 
     def add_or_item(self):
         new_label = DraggableItem("OR", self, self.canvas_area)
@@ -79,12 +97,6 @@ class Canvas(QWidget):
         new_label.show()
         self.items.append(new_label)
         self.canvas_area.update()
-
-    def toggle_connection_mode(self):
-        self.connection_mode = not self.connection_mode
-        if not self.connection_mode:
-            self.selected_item = None  # Reset selection if exiting mode
-        print(self.connection_mode)
 
     def handle_connection(self, item):
         """ Handles the connection between two items when in connection mode. """

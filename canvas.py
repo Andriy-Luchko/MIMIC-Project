@@ -6,7 +6,8 @@ from subquery import Subquery, EqualityFilter, RangeFilter, ReadmissionFilter
 from query import Query
 
 class Canvas(QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, frontend, parent=None):
+        self.frontend = frontend
         super().__init__(parent)
         self.setStyleSheet("background-color: lightgray; border: 1px solid black;")
         self.setMinimumHeight(400)
@@ -205,6 +206,7 @@ class Canvas(QWidget):
         Returns:
             Query or Subquery: The constructed query or subquery.
         """
+        curr_table_column_pairs = self.frontend.return_column_search_bar.get_table_column_pairs()
         if item.text() in ["OR", "AND"]:
             # This is a logical operator (UNION or INTERSECT)
             queries = []
@@ -231,7 +233,7 @@ class Canvas(QWidget):
 
             table_name, column_name = item.text().replace("range", "").split("_")
             return Subquery(
-                table_column_pairs=[(table_name, column_name)],
+                table_column_pairs=curr_table_column_pairs,
                 filters=[RangeFilter(table_name, column_name, low_value, high_value)],
             )
 
@@ -243,7 +245,7 @@ class Canvas(QWidget):
                 return None
 
             return Subquery(
-                table_column_pairs=[("admissions", "hadm_id")],
+                table_column_pairs=curr_table_column_pairs,
                 filters=[ReadmissionFilter("admissions", time_between_admissions)],
             )
 
@@ -255,7 +257,7 @@ class Canvas(QWidget):
                 return None
 
             return Subquery(
-                table_column_pairs=[(table_name, column_name)],
+                table_column_pairs=curr_table_column_pairs,
                 filters=[EqualityFilter(table_name, column_name, value)],
             )
 

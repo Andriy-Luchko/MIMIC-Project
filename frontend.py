@@ -37,7 +37,7 @@ class MainWindow(QMainWindow):
         main_layout.addWidget(self.setup_button)
 
         # Add the canvas to the layout
-        self.draggable_canvas = Canvas()
+        self.draggable_canvas = Canvas(self)
         main_layout.addWidget(self.draggable_canvas)
         self.filter_search_bar.canvas = self.draggable_canvas
         
@@ -47,7 +47,7 @@ class MainWindow(QMainWindow):
     def closeEvent(self, event):
         # Ensure to close the database connection when the app is closed
         self.db_connection.close()
-
+        
 
 def main():
     app = QApplication(sys.argv)

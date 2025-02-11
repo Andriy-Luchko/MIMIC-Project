@@ -166,28 +166,39 @@ class ReturnColumnSearchBar(QWidget):
             self.model.layoutChanged.emit()
             self.list_view.setVisible(True)
 
-    def add_to_selected_columns(self, index):
-        # Get the clicked item (table_name - column_name)
-        selected_item = self.model.data(index, Qt.DisplayRole)
-
-        if selected_item and selected_item not in self.selected_columns:
-            # Add to the selected columns list
-            self.selected_columns.append(selected_item)
-
-            # Update the selected columns model
-            self.selected_model = ColumnListModel(self.selected_columns)
-            self.selected_list_view.setModel(self.selected_model)
-            self.selected_model.layoutChanged.emit()
-
     def remove_from_selected_columns(self, index):
         # Get the clicked item (table_name - column_name) to be removed
         selected_item = self.selected_model.data(index, Qt.DisplayRole)
 
-        if selected_item in self.selected_columns:
-            # Remove the item from the selected columns list
-            self.selected_columns.remove(selected_item)
+        # Convert QVariant to string (PyQt5 handles this automatically)
+        if selected_item:  # Check if the QVariant is not empty
+            selected_item_str = selected_item  # QVariant is automatically converted to a Python string
+            if selected_item_str in self.selected_columns:
+                # Remove the item from the selected columns list
+                self.selected_columns.remove(selected_item_str)
 
-            # Update the selected columns model
-            self.selected_model = ColumnListModel(self.selected_columns)
-            self.selected_list_view.setModel(self.selected_model)
-            self.selected_model.layoutChanged.emit()
+                # Update the selected columns model
+                self.selected_model = ColumnListModel(self.selected_columns)
+                self.selected_list_view.setModel(self.selected_model)
+                self.selected_model.layoutChanged.emit()
+
+    def add_to_selected_columns(self, index):
+        # Get the clicked item (table_name - column_name)
+        selected_item = self.model.data(index, Qt.DisplayRole)
+
+        # Convert QVariant to string using value()
+        if selected_item.isValid():  # Check if the QVariant is valid
+            selected_item_str = selected_item.value()  # Convert QVariant to Python type
+            if selected_item_str and selected_item_str not in self.selected_columns:
+                # Add to the selected columns list
+                self.selected_columns.append(selected_item_str)
+
+                # Update the selected columns model
+                self.selected_model = ColumnListModel(self.selected_columns)
+                self.selected_list_view.setModel(self.selected_model)
+                self.selected_model.layoutChanged.emit()
+
+        print(self.get_table_column_pairs())
+
+    def get_table_column_pairs(self):
+        return [tuple(item.split(" - ")) for item in self.selected_columns if isinstance(item, str)]

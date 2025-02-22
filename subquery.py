@@ -50,16 +50,37 @@ class Subquery:
         if not current_table:
             return
 
-        from_tables.append(table_name)
+        # Add the current table to the FROM clause if it hasn't been added already
+        # Skip adding d_icd_diagnoses and d_items to the FROM clause since they are joined explicitly
+        if table_name not in from_tables and table_name not in ["d_icd_diagnoses", "d_items"]:
+            from_tables.append(table_name)
+
+        # Handle joins for the current table
         for parent_table, join_condition in zip(
             current_table.parent_tables, current_table.join_conditions
         ):
-            where_conditions.append(
-                f"{parent_table}.{join_condition[0]} = {table_name}.{join_condition[1]}"
-            )
-            self.recursive_join(
-                parent_table, from_tables, where_conditions, visited_tables
-            )
+            # Use LEFT JOIN for d_icd_diagnoses and d_items
+            if table_name in ["d_icd_diagnoses", "d_items"]:
+                # Alias d_icd_diagnoses as d_icd_diagnoses_ed when joining on diagnosis
+                if table_name == "d_icd_diagnoses" and parent_table == "diagnosis":
+                    alias = "d_icd_diagnoses_ed"
+                else:
+                    alias = table_name
+
+                # Recursively join parent tables
+                self.recursive_join(parent_table, from_tables, where_conditions, visited_tables)
+
+                # Add the LEFT JOIN clause
+                join_clause = f"LEFT JOIN {table_name} AS {alias} ON {parent_table}.{join_condition[0]} = {alias}.{join_condition[1]}"
+                from_tables.append(join_clause)
+            else:
+                # Recursively join parent tables
+                self.recursive_join(parent_table, from_tables, where_conditions, visited_tables)
+                # Add the join condition to the WHERE clause
+                where_conditions.append(
+                    f"{parent_table}.{join_condition[0]} = {table_name}.{join_condition[1]}"
+                )
+    
 
     def get_select_columns(self):
         """
@@ -82,23 +103,34 @@ class Subquery:
         where_conditions = []
         visited_tables = set([self.root_table])
 
+        # Add tables and joins based on table_column_pairs
         for table_name, _ in self.table_column_pairs:
-            self.recursive_join(
-                table_name, from_tables, where_conditions, visited_tables
-            )
+            self.recursive_join(table_name, from_tables, where_conditions, visited_tables)
 
+        # Add tables and joins based on filters
         for filter in self.filters:
-            self.recursive_join(
-                filter.table_name, from_tables, where_conditions, visited_tables
-            )
+            self.recursive_join(filter.table_name, from_tables, where_conditions, visited_tables)
 
+        # Combine filter conditions
         filter_conditions = [filter.to_sql() for filter in self.filters]
         final_filter = f"({f'\n{self.filter_combination}\n'.join(filter_conditions)})"
         where_conditions.append(final_filter)
 
+        # Separate regular tables from LEFT JOIN clauses
+        regular_tables = []
+        left_join_clauses = []
+        for table in from_tables:
+            if table.startswith("LEFT JOIN"):
+                left_join_clauses.append(table)
+            else:
+                regular_tables.append(table)
+
+        # Construct the query
         query = (
             f"SELECT\n{self.get_select_columns()}\nFROM "
-            + ", ".join(from_tables)
+            + ", ".join(regular_tables)  # Use commas to separate regular tables
+            + "\n"
+            + "\n".join(left_join_clauses)  # Append LEFT JOIN clauses without commas
             + "\n"
         )
         if where_conditions:

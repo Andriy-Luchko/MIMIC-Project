@@ -1,9 +1,11 @@
+import csv
 from PyQt5.QtWidgets import QWidget, QPushButton, QVBoxLayout, QHBoxLayout, QSizePolicy
 from PyQt5.QtGui import QPainter, QPen, QPolygon
 from PyQt5.QtCore import Qt, QPoint, QRect
 from draggableItem import DraggableItem
 from subquery import Subquery, EqualityFilter, RangeFilter, ReadmissionFilter
 from query import Query
+import os
 
 class Canvas(QWidget):
     def __init__(self, frontend, parent=None):
@@ -58,6 +60,12 @@ class Canvas(QWidget):
         )
         self.print_query_button.clicked.connect(self.print_query)
         
+        self.run_query_button = QPushButton("🚀 Run Query")
+        self.run_query_button.setStyleSheet(
+            "font-size: 18px; font-weight: bold; padding: 15px 30px; background-color: #009688; color: white; border-radius: 10px;"
+        )
+        self.run_query_button.clicked.connect(self.run_query)
+
         self.button_row.addStretch()
         self.button_row.addWidget(self.add_or_button)
         self.button_row.addWidget(self.add_and_button)
@@ -65,6 +73,7 @@ class Canvas(QWidget):
         self.button_row.addWidget(self.delete_button)
         self.button_row.addWidget(self.mark_root_button)
         self.button_row.addWidget(self.print_query_button)  # Add the new button
+        self.button_row.addWidget(self.run_query_button) 
         self.button_row.addStretch()
 
         self.layout.addLayout(self.button_row)
@@ -196,6 +205,68 @@ class Canvas(QWidget):
         else:
             print("Failed to build the query.")
 
+    def run_query(self):
+        """
+        Executes the query starting from the root query, writes the results to a CSV file in chunks,
+        and handles file naming conflicts by incrementing the file number.
+        """
+        if not self.query_root:
+            print("No query root has been set.")
+            return
+
+        # Build the query structure starting from the root
+        query = self._build_query_from_item(self.query_root)
+        if not query:
+            print("Failed to build the query.")
+            return
+
+        # Generate the SQL query
+        sql_query = query.build_query()
+        print("Executing SQL Query:")
+        print(sql_query)
+
+        # Execute the query using the database connection
+        try:
+            cursor = self.frontend.db_connection.cursor()
+            cursor.execute(sql_query)
+            column_names = [desc[0] for desc in cursor.description]  # Get column names
+        except Exception as e:
+            print(f"Error executing query: {e}")
+            return
+
+        # Write results to a CSV file in chunks
+        base_filename = "output"
+        file_extension = ".csv"
+        file_number = 1
+
+        # Find the next available filename
+        while True:
+            filename = f"{base_filename}{file_number}{file_extension}"
+            if not os.path.exists(filename):
+                break
+            file_number += 1
+
+        # Write the results to the CSV file in chunks
+        try:
+            with open(filename, mode="w", newline="", encoding="utf-8") as file:
+                writer = csv.writer(file)
+                writer.writerow(column_names)  # Write column headers
+
+                # Fetch and write rows in chunks
+                chunk_size = 1000  # Number of rows to fetch and write at a time
+                while True:
+                    rows = cursor.fetchmany(chunk_size)
+                    if not rows:
+                        break
+                    writer.writerows(rows)  # Write the chunk of rows
+                    print(f"Wrote {len(rows)} rows to {filename}")
+
+            print(f"Query results written to {filename}")
+        except Exception as e:
+            print(f"Error writing to CSV file: {e}")
+        finally:
+            cursor.close()  # Ensure the cursor is closed
+            
     def _build_query_from_item(self, item):
         """
         Recursively builds the query structure starting from the given item.

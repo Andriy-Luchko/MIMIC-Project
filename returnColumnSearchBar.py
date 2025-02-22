@@ -198,7 +198,5 @@ class ReturnColumnSearchBar(QWidget):
                 self.selected_list_view.setModel(self.selected_model)
                 self.selected_model.layoutChanged.emit()
 
-        print(self.get_table_column_pairs())
-
     def get_table_column_pairs(self):
         return [tuple(item.split(" - ")) for item in self.selected_columns if isinstance(item, str)]

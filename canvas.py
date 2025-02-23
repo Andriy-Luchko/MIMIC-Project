@@ -1,11 +1,11 @@
+import os
 import csv
+import json
 from PyQt5.QtWidgets import QWidget, QPushButton, QVBoxLayout, QHBoxLayout, QSizePolicy
 from PyQt5.QtGui import QPainter, QPen, QPolygon
 from PyQt5.QtCore import Qt, QPoint, QRect
-from draggableItem import DraggableItem
-from subquery import Subquery, EqualityFilter, RangeFilter, ReadmissionFilter
-from query import Query
-import os
+from draggable_item import DraggableItem
+from json_to_sql import json_to_sql
 
 class Canvas(QWidget):
     def __init__(self, frontend, parent=None):
@@ -19,6 +19,7 @@ class Canvas(QWidget):
         self.mark_root_mode = False
         self.selected_item = None 
         self.query_root = None
+        self.diagnosed_in = "hospital"  # Default value
 
         self.layout = QVBoxLayout(self)
         self.button_row = QHBoxLayout()
@@ -53,7 +54,13 @@ class Canvas(QWidget):
         )
         self.mark_root_button.clicked.connect(self.toggle_mark_root_mode)
 
-        # New button for printing the query
+        # New toggle button for diagnosis location
+        self.diagnosis_toggle = QPushButton("🏥 Hospital")  # Start with Hospital
+        self.diagnosis_toggle.setStyleSheet(
+            "font-size: 18px; font-weight: bold; padding: 15px 30px; background-color: #2196F3; color: white; border-radius: 10px;"
+        )
+        self.diagnosis_toggle.clicked.connect(self.toggle_diagnosis_location)
+
         self.print_query_button = QPushButton("🖨️ Print Query")
         self.print_query_button.setStyleSheet(
             "font-size: 18px; font-weight: bold; padding: 15px 30px; background-color: #607D8B; color: white; border-radius: 10px;"
@@ -72,8 +79,9 @@ class Canvas(QWidget):
         self.button_row.addWidget(self.connect_button)
         self.button_row.addWidget(self.delete_button)
         self.button_row.addWidget(self.mark_root_button)
-        self.button_row.addWidget(self.print_query_button)  # Add the new button
-        self.button_row.addWidget(self.run_query_button) 
+        self.button_row.addWidget(self.diagnosis_toggle)  # Add the new toggle button
+        self.button_row.addWidget(self.print_query_button)
+        self.button_row.addWidget(self.run_query_button)
         self.button_row.addStretch()
 
         self.layout.addLayout(self.button_row)
@@ -84,6 +92,15 @@ class Canvas(QWidget):
         self.layout.addWidget(self.canvas_area, stretch=1)
 
         self.setCursor(Qt.ArrowCursor)
+
+    def toggle_diagnosis_location(self):
+        """Toggle between hospital and ER diagnosis locations"""
+        if self.diagnosed_in == "hospital":
+            self.diagnosed_in = "ed"
+            self.diagnosis_toggle.setText("🚑 ER")
+        else:
+            self.diagnosed_in = "hospital"
+            self.diagnosis_toggle.setText("🏥 Hospital")
 
     def toggle_delete_mode(self):
         self.delete_mode = not self.delete_mode
@@ -193,15 +210,10 @@ class Canvas(QWidget):
         Parses the query structure starting from the root query, builds the SQL query,
         and prints it to the console.
         """
-        if not self.query_root:
-            print("No query root has been set.")
-            return
-
-        # Build the query structure starting from the root
-        query = self._build_query_from_item(self.query_root)
+        query = self._get_curr_sql_query()
         if query:
             print("Generated SQL Query:")
-            print(query.build_query())
+            print(query)
         else:
             print("Failed to build the query.")
 
@@ -210,25 +222,19 @@ class Canvas(QWidget):
         Executes the query starting from the root query, writes the results to a CSV file in chunks,
         and handles file naming conflicts by incrementing the file number.
         """
-        if not self.query_root:
-            print("No query root has been set.")
-            return
-
-        # Build the query structure starting from the root
-        query = self._build_query_from_item(self.query_root)
+        query = self._get_curr_sql_query()
         if not query:
             print("Failed to build the query.")
             return
 
         # Generate the SQL query
-        sql_query = query.build_query()
         print("Executing SQL Query:")
-        print(sql_query)
+        print(query)
 
         # Execute the query using the database connection
         try:
             cursor = self.frontend.db_connection.cursor()
-            cursor.execute(sql_query)
+            cursor.execute(query)
             column_names = [desc[0] for desc in cursor.description]  # Get column names
         except Exception as e:
             print(f"Error executing query: {e}")
@@ -275,38 +281,94 @@ class Canvas(QWidget):
             item (DraggableItem): The current item to process.
 
         Returns:
-            Query or Subquery: The constructed query or subquery.
+            dict: A query object in the format expected by the backend.
         """
-        curr_table_column_pairs = self.frontend.return_column_search_bar.get_table_column_pairs()
         if item.text() in ["OR", "AND"]:
-            # This is a logical operator (UNION or INTERSECT)
-            queries = []
+            # This is a logical operator (OR or AND)
+            filters = []
+            subqueries = []
+
             for child in item.children_items:
-                child_query = self._build_query_from_item(child)
-                if child_query:
-                    queries.append(child_query)
+                if child.text().endswith("range") or " - " in child.text() or child.text() == "ReadmissionFilter":
+                    # This is a filter
+                    child_filter = self._build_filter_from_item(child)
+                    if child_filter:
+                        filters.append(child_filter)
+                else:
+                    # This is a subquery (another logical operator)
+                    child_query = self._build_query_from_item(child)
+                    if child_query:
+                        subqueries.append(child_query)
 
-            if not queries:
-                return None
+            # Return a query object with both filters and subqueries
+            return {
+                "operator": item.text(),  # "OR" or "AND"
+                "filters": filters,
+                "subqueries": subqueries
+            }
 
-            # Determine the operation (UNION or INTERSECT) based on the item's text
-            operation = "UNION" if item.text() == "OR" else "INTERSECT"
-            return Query(queries=queries, union_or_intersect=operation)
+        else:
+            # This is a filter (range, equality, or readmission)
+            return self._build_filter_from_item(item)
 
-        elif item.text().endswith("range"):
+    def _get_curr_sql_query(self):
+        if not self.query_root:
+            print("No query root has been set.")
+            return
+
+        # Retrieve the selected tables and columns from the ReturnColumnSearchBar
+        select_tables = self.frontend.return_column_search_bar.get_selected_tables_and_columns()
+
+        # Build the query structure starting from the root
+        query_structure = self._build_query_from_item(self.query_root)
+
+        # If the query structure is a filter, wrap it in a query object with default operator "AND"
+        if "filter_type" in query_structure:
+            query_structure = {
+                "operator": "AND",  # Default operator
+                "filters": [query_structure],  # Wrap the filter in a list
+                "subqueries": []  # Empty subqueries list
+            }
+
+        # Construct the full query object with diagnosed_in setting
+        query_object = {
+            "diagnosed_in": self.diagnosed_in,  # Use the current diagnosis location setting
+            "select_tables": select_tables,
+            "query": query_structure
+        }
+
+        # Print the query object for debugging
+        print(json.dumps(query_object, indent=4))
+
+        # Convert the query object to SQL
+        return json_to_sql(query_object)
+    
+    def _build_filter_from_item(self, item):
+        """
+        Builds a filter object from the given item.
+
+        Args:
+            item (DraggableItem): The current item to process.
+
+        Returns:
+            dict: A filter object in the format expected by the backend.
+        """
+        if item.text().endswith("range"):
             # This is a range filter
-            print(item.text())
             low_value = item.low_input.text()
             high_value = item.high_input.text()
             if not low_value or not high_value:
                 print(f"Invalid range values for item: {item.text()}")
                 return None
 
-            table_name, column_name = item.text().replace("range", "").split("_")
-            return Subquery(
-                table_column_pairs=curr_table_column_pairs,
-                filters=[RangeFilter(table_name, column_name, low_value, high_value)],
-            )
+            table_name, column_name, _ = item.text().replace("range", "").split(" - ")
+            return {
+                "filter_type": "range",
+                "table": table_name,
+                "column": column_name,
+                "min": low_value,
+                "max": high_value
+            }
 
         elif item.text() == "ReadmissionFilter":
             # This is a readmission filter
@@ -315,10 +377,12 @@ class Canvas(QWidget):
                 print("Invalid time value for readmission filter.")
                 return None
 
-            return Subquery(
-                table_column_pairs=curr_table_column_pairs,
-                filters=[ReadmissionFilter("admissions", time_between_admissions)],
-            )
+            return {
+                "filter_type": "value",
+                "table": "admissions",
+                "column": "time_between_admissions",
+                "value": time_between_admissions
+            }
 
         else:
             # This is a regular filter (equality or other)
@@ -327,10 +391,12 @@ class Canvas(QWidget):
                 print(f"Invalid value for item: {item.text()}")
                 return None
 
-            return Subquery(
-                table_column_pairs=curr_table_column_pairs,
-                filters=[EqualityFilter(table_name, column_name, value)],
-            )
+            return {
+                "filter_type": "value",
+                "table": table_name,
+                "column": column_name,
+                "value": value
+            }
 
 
 class CanvasArea(QWidget):

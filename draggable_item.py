@@ -2,6 +2,7 @@ from PyQt5.QtWidgets import QLabel, QLineEdit, QHBoxLayout, QSpacerItem, QSizePo
 from PyQt5.QtCore import Qt, QPoint, QRect
 from PyQt5.QtGui import QFontMetrics
 
+
 class DraggableItem(QLabel):
     def __init__(self, text, canvas, parent=None, is_range=False):
         super().__init__(text, parent)

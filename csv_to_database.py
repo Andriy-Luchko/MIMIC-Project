@@ -1,6 +1,6 @@
+import os
 import sqlite3
 import pandas as pd
-import os
 from typing import List
 from functools import cache
 

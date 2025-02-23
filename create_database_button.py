@@ -1,8 +1,7 @@
 import os
 from PyQt5.QtWidgets import QPushButton, QFileDialog, QDialog, QLabel, QVBoxLayout
 from PyQt5.QtCore import QThread, pyqtSignal
-from csvToDatabase import create_database
-
+from csv_to_database import create_database
 
 class DatabaseCreationThread(QThread):
     # Signal to indicate the task is done
@@ -16,7 +15,6 @@ class DatabaseCreationThread(QThread):
         # Perform the database creation task
         create_database(self.path_to_data)
         self.task_done.emit()  # Signal that the task is done
-
 
 class DatabaseButton(QPushButton):
     def __init__(self, parent=None):

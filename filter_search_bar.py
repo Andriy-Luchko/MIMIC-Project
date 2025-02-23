@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QLineEdit, QVBoxLayout, QLabel, QWidget, QListView
 from PyQt5.QtCore import Qt, QAbstractListModel, QVariant
-from frontendFilterHelpers import fetch_unique_values, get_range_filters
+from frontend_filters import fetch_unique_values, get_range_filters
 
 
 class FilterListModel(QAbstractListModel):

@@ -12,7 +12,7 @@ export default function Home() {
           </p>
           <h1 className="text-4xl font-bold mb-6">MacOS Download</h1>
           <p className="text-lg mb-4">
-            <a href="/mimicQuery.app" download>
+            <a href="/mimicQuery.zip" download>
               Click here to download the macOS app
             </a>
           </p>

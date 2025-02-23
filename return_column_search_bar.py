@@ -198,5 +198,34 @@ class ReturnColumnSearchBar(QWidget):
                 self.selected_list_view.setModel(self.selected_model)
                 self.selected_model.layoutChanged.emit()
 
-    def get_table_column_pairs(self):
-        return [tuple(item.split(" - ")) for item in self.selected_columns if isinstance(item, str)]
+    def get_selected_tables_and_columns(self):
+        """
+        Retrieves the selected tables and columns in the format expected by the backend.
+
+        Returns:
+            list: A list of dictionaries, where each dictionary contains a table name and its selected columns.
+                  Example:
+                  [
+                      {"name": "patients", "columns": ["subject_id", "anchor_age"]},
+                      {"name": "admissions", "columns": ["race"]},
+                      {"name": "d_icd_diagnoses", "columns": ["long_title"]}
+                  ]
+        """
+        # Dictionary to store table names as keys and their columns as values
+        table_columns_map = {}
+
+        # Iterate through the selected columns
+        for item in self.selected_columns:
+            if isinstance(item, str) and " - " in item:
+                table_name, column_name = item.split(" - ")
+                if table_name not in table_columns_map:
+                    table_columns_map[table_name] = []
+                table_columns_map[table_name].append(column_name)
+
+        # Convert the dictionary to the required list format
+        selected_tables_and_columns = [
+            {"name": table_name, "columns": columns}
+            for table_name, columns in table_columns_map.items()
+        ]
+
+        return selected_tables_and_columns

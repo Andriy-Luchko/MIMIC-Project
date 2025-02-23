@@ -1,10 +1,10 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QLabel
-from createDatabaseButton import create_database_button
-from filterSearchBar import FilterSearchBar
-from returnColumnSearchBar import ReturnColumnSearchBar
-from canvas import Canvas
 import sqlite3
+from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QLabel
+from create_database_button import create_database_button
+from filter_search_bar import FilterSearchBar
+from return_column_search_bar import ReturnColumnSearchBar
+from canvas import Canvas
 
 
 class MainWindow(QMainWindow):

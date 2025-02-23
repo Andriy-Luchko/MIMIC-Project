@@ -35,12 +35,15 @@ TABLE_RELATIONSHIPS = {
         "d_icd_procedures": {"parent": "procedures_icd", "conditions": [("icd_code", "icd_code")]},
         "emar_detail": {"parent": "emar", "conditions": [("emar_id", "emar_id")]},
         "poe_detail": {"parent": "poe", "conditions": [("poe_id", "poe_id")]},
-        "d_items": {
-            "parents": ["chartevents", "datetimeevents", "ingredientevents", "inputevents", 
-                       "procedureevents", "outputevents"],
-            "conditions": [("itemid", "itemid")] * 6
-        },
-        "lab_items": {"parent": "poe", "conditions": [("poe_id", "poe_id")]}
+        "lab_items": {"parent": "poe", "conditions": [("poe_id", "poe_id")]},
+        
+        # Add mappings for the new xxxx_d_items tables
+        "chartevents_d_items": {"parent": "chartevents", "conditions": [("itemid", "itemid")]},
+        "datetimeevents_d_items": {"parent": "datetimeevents", "conditions": [("itemid", "itemid")]},
+        "ingredientevents_d_items": {"parent": "ingredientevents", "conditions": [("itemid", "itemid")]},
+        "inputevents_d_items": {"parent": "inputevents", "conditions": [("itemid", "itemid")]},
+        "procedureevents_d_items": {"parent": "procedureevents", "conditions": [("itemid", "itemid")]},
+        "outputevents_d_items": {"parent": "outputevents", "conditions": [("itemid", "itemid")]},
     }
 }
 
@@ -75,7 +78,6 @@ def get_table_parent(table_name, diagnosed_in):
         
         return special_join["parent"], special_join["conditions"][0]
 
-            
     return None, None
 
 def recursive_join(table_name, from_tables, where_conditions, visited_tables, diagnosed_in):

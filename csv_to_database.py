@@ -113,17 +113,24 @@ def insert_all_data(connection, path_to_data):
         print(f"Inserted all data into {table_name}.")
 
 def create_database(path_to_data):
-    database_path = "./MINI_MIMIC_Database.db"
-
+    # Combine the path_to_data with the database name
+    database_path = os.path.join(path_to_data, "MIMIC_Database.db")
+    
+    # Create the database and perform operations
     with sqlite3.connect(database_path) as connection:
         drop_all_tables(connection)
         create_all_tables(connection)
         insert_all_data(connection, path_to_data)
         split_omr(connection)
         rename_stay_id_columns(connection)
+        split_d_items(connection)
+        
         print("All tables processed successfully!")
         print(f"Database made at {database_path}")
         print(f"Data taken from {path_to_data}")
+    
+    # Return the full path to the created database
+    return database_path
 
 def split_omr(connection):
     """
@@ -162,21 +169,43 @@ def rename_stay_id_columns(connection):
         print(f"Error: The file {sql_file_path} was not found.")
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
-        
+      
+def split_d_items(connection):
+    """
+    Reads the SQL commands from split_d_items.sql and executes them to split the d_items table data into separate tables.
+
+    Args:
+        connection (sqlite3.Connection): A connection to the SQLite database.
+    """
+    sql_file_path = "./sql_scripts/split_d_items.sql"
+    try:
+        with open(sql_file_path, 'r') as file:
+            sql_script = file.read()
+        print("Executing SPLIT D_ITEMS script.")
+        execute_script(connection, sql_script)
+        print("D_ITEMS table split successfully.")
+    except FileNotFoundError:
+        print(f"Error: The file {sql_file_path} was not found.")
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+    
+      
 def main():
     database_path = "./MINI_MIMIC_Database.db"
 
     with sqlite3.connect(database_path) as connection:
-        if 0:
+        if 1:
             drop_all_tables(connection)
-        if 0:
+        if 1:
             create_all_tables(connection)
-        if 0:
+        if 1:
             insert_all_data(connection, os.getcwd())
-        if 0:
+        if 1:
             split_omr(connection)
         if 1:
             rename_stay_id_columns(connection)
+        if 1:
+            split_d_items(connection)
             
         print("All tables processed successfully!")
 

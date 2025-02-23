@@ -1,3 +1,5 @@
+import sqlite3
+
 def get_unique_column_values(db_connection, table_name, column_name):
     """
     Helper function to fetch distinct values from a specified column in a specified table.
@@ -9,17 +11,20 @@ def get_unique_column_values(db_connection, table_name, column_name):
     # Construct the SQL query to fetch distinct values from the specified column of the table
     query = f"SELECT DISTINCT {column_name} FROM {table_name}"
 
-    # Execute the query
-    db_cursor.execute(query)
-    column_data = db_cursor.fetchall()
+    try: # Execute the query
+        db_cursor.execute(query)
+        column_data = db_cursor.fetchall()
 
-    # Format the data for each value
-    formatted_values = [
-        f"{table_name} - {column_name} - {value[0]}"  # value[0] contains the column value
-        for value in column_data
-    ]
-
-    return formatted_values
+        # Format the data for each value
+        formatted_values = [
+            f"{table_name} - {column_name} - {value[0]}"  # value[0] contains the column value
+            for value in column_data
+        ]
+        return formatted_values
+    except sqlite3.OperationalError:
+        print("Table doesn't exist")
+        
+    return []
 
 
 def fetch_unique_values(db_connection):
@@ -38,6 +43,12 @@ def fetch_unique_values(db_connection):
         "services": ["curr_service"],
         "transfers": ["careunit"],
         "edstays": ["race", "gender", "disposition"],
+        "chartevents_d_items": ["itemid", "label", "abbreviation", "category"],
+        "datetimeevents_d_items": ["itemid", "label", "abbreviation", "category"],
+        "ingredientevents_d_items": ["itemid", "label", "abbreviation", "category"],
+        "inputevents_d_items": ["itemid", "label", "abbreviation", "category"],
+        "procedureevents_d_items": ["itemid", "label", "abbreviation", "category"],
+        "outputevents_d_items": ["itemid", "label", "abbreviation", "category"],
     }
 
     all_values = []

@@ -321,7 +321,10 @@ class Canvas(QWidget):
 
         # Build the query structure starting from the root
         query_structure = self._build_query_from_item(self.query_root)
-
+        
+        if not query_structure:
+            return ""
+        
         # If the query structure is a filter, wrap it in a query object with default operator "AND"
         if "filter_type" in query_structure:
             query_structure = {

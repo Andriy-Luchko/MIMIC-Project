@@ -1,7 +1,7 @@
 import os
 import csv
 import json
-from PyQt5.QtWidgets import QWidget, QPushButton, QVBoxLayout, QHBoxLayout, QSizePolicy
+from PyQt5.QtWidgets import QWidget, QPushButton, QVBoxLayout, QHBoxLayout, QSizePolicy, QMessageBox
 from PyQt5.QtGui import QPainter, QPen, QPolygon
 from PyQt5.QtCore import Qt, QPoint, QRect
 from draggable_item import DraggableItem
@@ -60,12 +60,6 @@ class Canvas(QWidget):
             "font-size: 18px; font-weight: bold; padding: 15px 30px; background-color: #2196F3; color: white; border-radius: 10px;"
         )
         self.diagnosis_toggle.clicked.connect(self.toggle_diagnosis_location)
-
-        self.print_query_button = QPushButton("🖨️ Print Query")
-        self.print_query_button.setStyleSheet(
-            "font-size: 18px; font-weight: bold; padding: 15px 30px; background-color: #607D8B; color: white; border-radius: 10px;"
-        )
-        self.print_query_button.clicked.connect(self.print_query)
         
         self.run_query_button = QPushButton("🚀 Run Query")
         self.run_query_button.setStyleSheet(
@@ -80,7 +74,6 @@ class Canvas(QWidget):
         self.button_row.addWidget(self.delete_button)
         self.button_row.addWidget(self.mark_root_button)
         self.button_row.addWidget(self.diagnosis_toggle)  # Add the new toggle button
-        self.button_row.addWidget(self.print_query_button)
         self.button_row.addWidget(self.run_query_button)
         self.button_row.addStretch()
 
@@ -240,14 +233,27 @@ class Canvas(QWidget):
             print(f"Error executing query: {e}")
             return
 
-        # Write results to a CSV file in chunks
+        # Load output path from YAML  
+        output_path = self.frontend.output_path
+        # Ensure output path is set
+        if not output_path:
+            QMessageBox.warning(
+                None,
+                "Output Path Not Set",
+                "Please specify an output directory in config.yaml before saving the file."
+            )
+            return
+
+        # Ensure the output directory exists
+        os.makedirs(output_path, exist_ok=True)
+
+        # Find the next available filename in the specified output directory
         base_filename = "output"
         file_extension = ".csv"
         file_number = 1
 
-        # Find the next available filename
         while True:
-            filename = f"{base_filename}{file_number}{file_extension}"
+            filename = os.path.join(output_path, f"{base_filename}{file_number}{file_extension}")
             if not os.path.exists(filename):
                 break
             file_number += 1

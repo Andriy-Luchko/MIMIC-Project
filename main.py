@@ -4,19 +4,34 @@ import yaml
 import os
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QVBoxLayout, QWidget, 
                            QLabel, QFileDialog, QPushButton, QMessageBox)
+from PyQt5.QtCore import Qt
 from create_database_button import create_database_button
 from filter_search_bar import FilterSearchBar
 from return_column_search_bar import ReturnColumnSearchBar
 from canvas import Canvas
+from mei_cleanup import mei_lifecycle
 
-def load_config(file_path="config.yaml"):
-    if os.path.exists(file_path):
-        with open(file_path, "r") as file:
+def get_config_path():
+    """Get the path for the config.yaml file inside the PyInstaller dist folder."""
+    if getattr(sys, 'frozen', False):  # Check if running as a PyInstaller bundle
+        base_path = sys._MEIPASS  # PyInstaller temp directory
+    else:
+        base_path = os.path.dirname(os.path.abspath(__file__))  # Normal script execution
+
+    return os.path.join(base_path, "config.yaml")
+
+def load_config():
+    """Load configuration from config.yaml inside the PyInstaller dist folder."""
+    config_path = get_config_path()
+    if os.path.exists(config_path):
+        with open(config_path, "r") as file:
             return yaml.safe_load(file) or {}
     return {}
 
-def save_config(config, file_path="config.yaml"):
-    with open(file_path, "w") as file:
+def save_config(config):
+    """Save configuration to config.yaml inside the PyInstaller dist folder."""
+    config_path = get_config_path()
+    with open(config_path, "w") as file:
         yaml.dump(config, file)
 
 class MainWindow(QMainWindow):
@@ -24,49 +39,68 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("MIMIC Query App")
         self.setGeometry(0, 0, width, height)
-        
+
         # Initialize variables
         self.db_connection = None
         self.search_widgets = []
-        self.setup_button = None  # Initialize setup_button as None
-        
+        self.setup_button = None  
+
         # Central widget setup
         self.central_widget = QWidget(self)
         self.setCentralWidget(self.central_widget)
-        
+
         # Main layout
         self.main_layout = QVBoxLayout()
         self.central_widget.setLayout(self.main_layout)
-        
+
         # Load configuration
         self.config = load_config()
         self.db_path = self.config.get("database_path", "")
-        self.json_path = self.config.get("json_path", "")
         self.output_path = self.config.get("output_path", "")
-        
+
         # Initialize UI
         self.setup_initial_ui()
-        
+
         # If database exists, show the main UI
         if self.db_path and os.path.exists(self.db_path):
             self.connect_database(self.db_path)
-    
+
     def setup_initial_ui(self):
         """Setup the initial UI with database setup buttons"""
-        # Create buttons
         self.setup_button = create_database_button(self)
-        self.setup_button.database_created.connect(self.on_database_created)  # Connect to the database_created signal
-        
+        self.setup_button.database_created.connect(self.on_database_created)
+        self.setup_button.setFixedWidth(400)
+
         self.specify_db_button = QPushButton("Specify Database Path")
         self.specify_db_button.clicked.connect(self.specify_database)
-        
-        # Add buttons to layout
-        self.main_layout.addWidget(self.setup_button)
-        self.main_layout.addWidget(self.specify_db_button)
-        
-        # Hide the setup button if the database already exists
+        self.specify_db_button.setFixedWidth(400)
+
+        self.specify_output_button = QPushButton("Specify Output Path")  # New button
+        self.specify_output_button.clicked.connect(self.specify_output_path)
+        self.specify_output_button.setFixedWidth(400)
+
+        # Layout for buttons
+        button_layout = QVBoxLayout()
+        button_layout.addWidget(self.setup_button, alignment=Qt.AlignCenter)
+        button_layout.addWidget(self.specify_db_button, alignment=Qt.AlignCenter)
+        button_layout.addWidget(self.specify_output_button, alignment=Qt.AlignCenter)  # Add new button
+
+        self.main_layout.addLayout(button_layout)
+
         if self.db_path and os.path.exists(self.db_path):
             self.setup_button.setVisible(False)
+
+    def specify_output_path(self):
+        """Open dialog to select output directory"""
+        directory = QFileDialog.getExistingDirectory(
+            self,
+            "Select Output Directory",
+            ""
+        )
+        if directory:
+            self.output_path = directory
+            self.config["output_path"] = directory
+            save_config(self.config)
     
     def on_database_created(self, db_path):
         """Handle database creation signal"""
@@ -153,6 +187,7 @@ class MainWindow(QMainWindow):
         event.accept()
 
 def main():
+    mei_lifecycle()
     app = QApplication(sys.argv)
     screen_rect = app.desktop().screenGeometry()
     window = MainWindow(screen_rect.width(), screen_rect.height())

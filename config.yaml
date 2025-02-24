@@ -1,3 +1,3 @@
-database_path: /Users/andriyluchko/medical data project/MIMIC Project/databases/MIMIC_Database.db
-json_path: ./frontend_state_jsons/
-output_path: ./mimic_query_outputs/
+database_path: /Users/andriyluchko/MIMIC Project/databases/MIMIC_Database.db
+json_path: ./state_jsons/
+output_path: /Users/andriyluchko/MIMIC Project/databases

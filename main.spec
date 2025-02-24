@@ -5,7 +5,7 @@ a = Analysis(
     pathex=[],
     binaries=[],
     datas=[('./sql_scripts/*', './sql_scripts/'), ('./config.yaml', './')],
-    hiddenimports=['psutil'],
+    hiddenimports=['psutil._psutil_windows', 'psutil._psutil_common', 'psutil'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
@@ -22,7 +22,7 @@ exe = EXE(
     a.binaries,        # Include binaries in the exe
     a.datas,          # Include data in the exe
     [],
-    name='main',
+    name='mimicQuery',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,

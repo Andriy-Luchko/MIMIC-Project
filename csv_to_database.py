@@ -92,13 +92,14 @@ def create_all_tables(connection):
         print(f"An unexpected error occurred: {e}")
     
 
-def insert_all_data(connection, path_to_data):
-    # This function inserts data from CSV files into the corresponding tables with chunking
+def insert_all_data(connection, path_to_data, progress_callback=None):
     csv_paths_and_table_names = get_csv_path_and_table_names(path_to_data)
     chunksize = 100000  # Size of each chunk
     
-    # in case they rename their files or have an extra csv inside the directory - we want to make sure we are only making the tables we want
     work_set = set(['pyxis', 'vitalsign', 'medrecon', 'triage', 'edstays', 'diagnosis', 'poe_detail', 'provider', 'pharmacy', 'emar', 'microbiologyevents', 'labevents', 'admissions', 'd_labitems', 'prescriptions', 'procedures_icd', 'poe', 'd_hcpcs', 'omr', 'transfers', 'diagnoses_icd', 'services', 'hcpcsevents', 'drgcodes', 'patients', 'd_icd_diagnoses', 'd_icd_procedures', 'emar_detail', 'd_items', 'procedureevents', 'inputevents', 'datetimeevents', 'ingredientevents', 'chartevents', 'caregiver', 'outputevents', 'icustays', 'radiology', 'discharge'])
+    
+    total_files = len(work_set)
+    completed_files = 0
     
     for csv_file_path, table_name in csv_paths_and_table_names:
         if table_name not in work_set:
@@ -110,17 +111,20 @@ def insert_all_data(connection, path_to_data):
             print(f"{i} Inserted a chunk of data into {table_name} - rows complete: ({(i + 1) * chunksize})")
             break
         
+        completed_files += 1
+        if progress_callback:
+            progress = int((completed_files / total_files) * 100)
+            progress_callback.emit(progress)
+        
         print(f"Inserted all data into {table_name}.")
 
-def create_database(path_to_data):
-    # Combine the path_to_data with the database name
+def create_database(path_to_data, progress_callback=None):
     database_path = os.path.join(path_to_data, "MIMIC_Database.db")
     
-    # Create the database and perform operations
     with sqlite3.connect(database_path) as connection:
         drop_all_tables(connection)
         create_all_tables(connection)
-        insert_all_data(connection, path_to_data)
+        insert_all_data(connection, path_to_data, progress_callback)
         split_omr(connection)
         rename_stay_id_columns(connection)
         split_d_items(connection)
@@ -129,7 +133,6 @@ def create_database(path_to_data):
         print(f"Database made at {database_path}")
         print(f"Data taken from {path_to_data}")
     
-    # Return the full path to the created database
     return database_path
 
 def split_omr(connection):

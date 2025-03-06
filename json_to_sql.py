@@ -195,14 +195,14 @@ def query_to_sql(query, select_columns, select_tables, diagnosed_in=None):
     if filters:
         filter_query = build_filter_query(filters, operator, select_columns, select_tables, 
                                         diagnosed_in if check_subqueries_for_icd(query) else None)
-        query_parts.append(f"SELECT * FROM (\n{filter_query}\n)")
+        query_parts.append(f"SELECT DISTINCT * FROM (\n{filter_query}\n)")
     
     # Process all subqueries
     if subqueries:
         for subquery in subqueries:
             subquery_sql = query_to_sql(subquery, select_columns, select_tables, 
                                       diagnosed_in if check_subqueries_for_icd(subquery) else None)
-            query_parts.append(f"SELECT * FROM (\n{subquery_sql}\n)")
+            query_parts.append(f"SELECT DISTINCT * FROM (\n{subquery_sql}\n)")
     
     # Combine all parts with the operator
     if query_parts:

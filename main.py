@@ -3,7 +3,8 @@ import sqlite3
 import yaml
 import os
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QVBoxLayout, QWidget, 
-                           QLabel, QFileDialog, QPushButton, QMessageBox)
+                           QLabel, QFileDialog, QPushButton, QMessageBox,
+                           QStackedWidget, QHBoxLayout)
 from PyQt5.QtCore import Qt
 from create_database_button import create_database_button
 from filter_search_bar import FilterSearchBar
@@ -53,20 +54,75 @@ class MainWindow(QMainWindow):
         self.main_layout = QVBoxLayout()
         self.central_widget.setLayout(self.main_layout)
 
+        # Create stacked widget to hold different pages
+        self.stacked_widget = QStackedWidget()
+        
+        # Create pages
+        self.page1 = QWidget()
+        self.page2 = QWidget()
+        
+        # Add pages to stacked widget
+        self.stacked_widget.addWidget(self.page1)
+        self.stacked_widget.addWidget(self.page2)
+        
+        # Setup layouts for pages
+        self.page1_layout = QVBoxLayout()
+        self.page2_layout = QVBoxLayout()
+        self.page1.setLayout(self.page1_layout)
+        self.page2.setLayout(self.page2_layout)
+
+        # Create navigation buttons
+        self.nav_layout = QHBoxLayout()
+        self.page1_button = QPushButton("Page 1")
+        self.page2_button = QPushButton("Page 2")
+        
+        self.page1_button.clicked.connect(self.go_to_page1)
+        self.page2_button.clicked.connect(self.go_to_page2)
+        
+        self.nav_layout.addWidget(self.page1_button)
+        self.nav_layout.addWidget(self.page2_button)
+        
+        # Add navigation and stacked widget to main layout
+        self.main_layout.addLayout(self.nav_layout)
+        self.main_layout.addWidget(self.stacked_widget)
+
         # Load configuration
         self.config = load_config()
         self.db_path = self.config.get("database_path", "")
         self.output_path = self.config.get("output_path", "")
 
-        # Initialize UI
-        self.setup_initial_ui()
+        # Initialize UI for both pages
+        self.setup_page1_ui()
+        self.setup_page2_ui()
 
         # If database exists, show the main UI
         if self.db_path and os.path.exists(self.db_path):
             self.connect_database(self.db_path)
+            
+        # Start on page 1
+        self.stacked_widget.setCurrentIndex(0)
+        self.update_navigation_buttons()
 
-    def setup_initial_ui(self):
-        """Setup the initial UI with database setup buttons"""
+    def go_to_page1(self):
+        """Switch to page 1"""
+        self.stacked_widget.setCurrentIndex(0)
+        self.update_navigation_buttons()
+        
+    def go_to_page2(self):
+        """Switch to page 2"""
+        self.stacked_widget.setCurrentIndex(1)
+        self.update_navigation_buttons()
+        
+    def update_navigation_buttons(self):
+        """Update the navigation buttons based on current page"""
+        current_index = self.stacked_widget.currentIndex()
+        
+        # Disable the button for the current page
+        self.page1_button.setEnabled(current_index != 0)
+        self.page2_button.setEnabled(current_index != 1)
+
+    def setup_page1_ui(self):
+        """Setup the initial UI with database setup buttons on page 1"""
         self.setup_button = create_database_button(self)
         self.setup_button.database_created.connect(self.on_database_created)
         self.setup_button.setFixedWidth(400)
@@ -75,7 +131,7 @@ class MainWindow(QMainWindow):
         self.specify_db_button.clicked.connect(self.specify_database)
         self.specify_db_button.setFixedWidth(400)
 
-        self.specify_output_button = QPushButton("Specify Output Path")  # New button
+        self.specify_output_button = QPushButton("Specify Output Path")
         self.specify_output_button.clicked.connect(self.specify_output_path)
         self.specify_output_button.setFixedWidth(400)
 
@@ -83,12 +139,35 @@ class MainWindow(QMainWindow):
         button_layout = QVBoxLayout()
         button_layout.addWidget(self.setup_button, alignment=Qt.AlignCenter)
         button_layout.addWidget(self.specify_db_button, alignment=Qt.AlignCenter)
-        button_layout.addWidget(self.specify_output_button, alignment=Qt.AlignCenter)  # Add new button
+        button_layout.addWidget(self.specify_output_button, alignment=Qt.AlignCenter)
 
-        self.main_layout.addLayout(button_layout)
+        # Add button layout to page 1
+        self.page1_layout.addLayout(button_layout)
 
         if self.db_path and os.path.exists(self.db_path):
             self.setup_button.setVisible(False)
+
+    def setup_page2_ui(self):
+        """Setup the UI for page 2"""
+        # Add content for page 2 here
+        page2_label = QLabel("This is Page 2 - Add your new content here")
+        page2_label.setAlignment(Qt.AlignCenter)
+        
+        # Example: Add a button that does something on page 2
+        example_button = QPushButton("Example Page 2 Action")
+        example_button.clicked.connect(self.page2_action)
+        example_button.setFixedWidth(400)
+        
+        self.page2_layout.addWidget(page2_label)
+        self.page2_layout.addWidget(example_button, alignment=Qt.AlignCenter)
+        
+    def page2_action(self):
+        """Example action for page 2 button"""
+        QMessageBox.information(
+            self,
+            "Page 2 Action",
+            "You triggered the page 2 action. Replace this with your actual functionality."
+        )
 
     def specify_output_path(self):
         """Open dialog to select output directory"""
@@ -111,13 +190,16 @@ class MainWindow(QMainWindow):
         self.setup_button.setVisible(False)  # Hide the button after database creation
     
     def setup_main_ui(self):
-        """Setup the main UI with search bars and canvas"""
+        """Setup the main UI with search bars and canvas on page 1"""
+        # Clear previous widgets if any
+        self.clear_main_ui()
+        
         # Create search bars and canvas
         self.return_column_search_bar = ReturnColumnSearchBar(self.db_connection)
-        self.return_column_search_bar.setFixedHeight(250)
+        self.return_column_search_bar.setFixedHeight(180)
         
         self.filter_search_bar = FilterSearchBar(self.db_connection)
-        self.filter_search_bar.setFixedHeight(250)
+        self.filter_search_bar.setFixedHeight(180)
         
         self.draggable_canvas = Canvas(self)
         self.filter_search_bar.canvas = self.draggable_canvas
@@ -129,9 +211,9 @@ class MainWindow(QMainWindow):
             self.draggable_canvas
         ]
         
-        # Add widgets to layout
+        # Add widgets to page 1 layout
         for widget in self.search_widgets:
-            self.main_layout.addWidget(widget)
+            self.page1_layout.addWidget(widget)
     
     def clear_main_ui(self):
         """Clear the main UI components"""
@@ -170,7 +252,6 @@ class MainWindow(QMainWindow):
             save_config(self.config)
             
             # Update UI
-            self.clear_main_ui()
             self.setup_main_ui()
             
         except sqlite3.Error as e:

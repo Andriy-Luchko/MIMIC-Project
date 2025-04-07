@@ -8,14 +8,14 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QVBoxLayout, QWidget,
                            QLabel, QFileDialog, QPushButton, QMessageBox,
                            QStackedWidget, QHBoxLayout, QCheckBox, QScrollArea,
                            QProgressBar, QGroupBox, QGridLayout, QFrame, QLineEdit)
-from PyQt5.QtCore import Qt, pyqtSignal, QObject
+from PyQt5.QtCore import Qt, pyqtSignal, QObject, QTimer
 from create_database_button import create_database_button
 from filter_search_bar import FilterSearchBar
 from return_column_search_bar import ReturnColumnSearchBar
 from canvas import Canvas
 from mei_cleanup import mei_lifecycle
 from to_spss_data import one_hot_encode_csv
-from update_checker import run_update_check_in_background
+from update_checker import UpdateChecker
 
 def get_config_path():
     """Get the path for the config.yaml file inside the PyInstaller dist folder."""
@@ -547,11 +547,30 @@ class MainWindow(QMainWindow):
 
 def main():
     mei_lifecycle()
-    run_update_check_in_background()
+    
     app = QApplication(sys.argv)
     screen_rect = app.desktop().screenGeometry()
     window = MainWindow(screen_rect.width(), screen_rect.height())
     window.show()
+
+    # Set up update checker
+    checker = UpdateChecker()
+
+    def on_update_available(download_url):
+        reply = QMessageBox.question(
+            window,
+            "Update Available",
+            "A new version of MimicQuery is available. Would you like to update now?",
+            QMessageBox.Yes | QMessageBox.No
+        )
+        if reply == QMessageBox.Yes:
+            checker.apply_update(download_url)
+
+    checker.update_available.connect(on_update_available)
+
+    # Run check after app loads
+    QTimer.singleShot(2000, checker.check_for_update)
+
     sys.exit(app.exec_())
 
 if __name__ == "__main__":

@@ -4,7 +4,11 @@ a = Analysis(
     ['main.py'],
     pathex=[],
     binaries=[],
-    datas=[('./sql_scripts/*', './sql_scripts/'), ('./config.yaml', './')],
+    datas=[
+        ('./sql_scripts/*', './sql_scripts/'),
+        ('./config.yaml', './'),
+        ('./version.txt', './')
+    ],
     hiddenimports=['psutil._psutil_windows', 'psutil._psutil_common', 'psutil'],
     hookspath=[],
     hooksconfig={},

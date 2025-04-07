@@ -19,8 +19,12 @@ def is_pid_running(pid):
         return False
 
 def cleanup_old_mei_folders():
-    """Remove old MEI folders belonging to our app if their PID is not running."""
+    current_mei = getattr(sys, '_MEIPASS', None)
+
     for folder in get_temp_mei_folders():
+        if folder == current_mei:
+            continue  # Never delete our own MEI folder
+
         marker_path = os.path.join(folder, MARKER_FILENAME)
         
         if os.path.exists(marker_path):
@@ -28,11 +32,9 @@ def cleanup_old_mei_folders():
                 with open(marker_path, "r") as f:
                     pid = int(f.read().strip())
 
-                # Delete if PID is no longer running or belongs to another app
                 if not is_pid_running(pid):
                     shutil.rmtree(folder)
                     print(f"Removed stale MEI folder: {folder}")
-            
             except Exception as e:
                 print(f"Failed to check or remove {folder}: {e}")
 

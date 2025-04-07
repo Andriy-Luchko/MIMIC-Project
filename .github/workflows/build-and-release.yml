@@ -3,10 +3,10 @@ name: Build and Release App
 on:
   push:
     tags:
-      - 'v*' # Trigger on version tags
+      - 'v*'
 
 permissions:
-  contents: write
+  contents: write  # needed for GitHub release uploads
 
 jobs:
   build:
@@ -24,7 +24,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: '3.11'
+        python-version: '3.12'
 
     - name: Install dependencies
       run: |
@@ -36,21 +36,21 @@ jobs:
       run: |
         pyinstaller main.spec
 
-    - name: Zip output
+    - name: Zip output (Windows)
+      if: runner.os == 'Windows'
       run: |
-        cd dist
-        if [[ "$RUNNER_OS" == "Windows" ]]; then
-          powershell Compress-Archive -Path mimicQuery.exe -DestinationPath mimicQuery-windows-${{ github.ref_name }}.zip
-        elif [[ "$RUNNER_OS" == "macOS" ]]; then
-          ditto -c -k --sequesterRsrc --keepParent mimicQuery.app mimicQuery-mac-${{ github.ref_name }}.zip
-        else
-          zip mimicQuery-linux-${{ github.ref_name }}.zip mimicQuery
-        fi
+        powershell.exe Compress-Archive -Path dist\mimicQuery.exe -DestinationPath mimicQuery-windows-${{ github.ref_name }}.zip
+        move mimicQuery-windows-${{ github.ref_name }}.zip dist\
+
+    - name: Zip output (macOS or Linux)
+      if: runner.os != 'Windows'
+      run: |
+        zip -r mimicQuery-${{ runner.os }}-${{ github.ref_name }}.zip dist/mimicQuery*
+        mv mimicQuery-${{ runner.os }}-${{ github.ref_name }}.zip dist/
 
     - name: Upload release asset
       uses: softprops/action-gh-release@v2
       with:
-        files: |
-          dist/mimicQuery-*-*.zip
+        files: dist/mimicQuery-*-*.zip
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

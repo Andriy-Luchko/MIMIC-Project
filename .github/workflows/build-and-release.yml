@@ -6,7 +6,7 @@ on:
       - 'v*'
 
 permissions:
-  contents: write  # needed for GitHub release uploads
+  contents: write
 
 jobs:
   build:
@@ -43,18 +43,20 @@ jobs:
     - name: Zip output (Windows)
       if: runner.os == 'Windows'
       run: |
-        powershell.exe Compress-Archive -Path dist\mimicQuery.exe -DestinationPath mimicQuery-windows-${{ github.ref_name }}.zip
-        move mimicQuery-windows-${{ github.ref_name }}.zip dist\
+        cd dist
+        powershell Compress-Archive -Path * -DestinationPath ../mimicQuery-windows-${{ github.ref_name }}.zip
+        cd ..
 
     - name: Zip output (macOS or Linux)
       if: runner.os != 'Windows'
       run: |
-        zip -r mimicQuery-${{ runner.os }}-${{ github.ref_name }}.zip dist/mimicQuery*
-        mv mimicQuery-${{ runner.os }}-${{ github.ref_name }}.zip dist/
+        cd dist
+        zip -r ../mimicQuery-${{ runner.os }}-${{ github.ref_name }}.zip ./*
+        cd ..
 
     - name: Upload release asset
       uses: softprops/action-gh-release@v2
       with:
-        files: dist/mimicQuery-*-*.zip
+        files: mimicQuery-*-*.zip
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,7 @@
+{
+    "app_version": "1.0.0",
+    "updater_version": "1.0.0",
+    "app_url": "https://your-server.com/App.exe",
+    "updater_url": "https://your-server.com/Updater.exe"
+  }
+  

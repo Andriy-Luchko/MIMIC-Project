@@ -15,6 +15,7 @@ from return_column_search_bar import ReturnColumnSearchBar
 from canvas import Canvas
 from mei_cleanup import mei_lifecycle
 from to_spss_data import one_hot_encode_csv
+from update_checker import run_update_check_in_background
 
 def get_config_path():
     """Get the path for the config.yaml file inside the PyInstaller dist folder."""
@@ -546,6 +547,7 @@ class MainWindow(QMainWindow):
 
 def main():
     mei_lifecycle()
+    run_update_check_in_background()
     app = QApplication(sys.argv)
     screen_rect = app.desktop().screenGeometry()
     window = MainWindow(screen_rect.width(), screen_rect.height())

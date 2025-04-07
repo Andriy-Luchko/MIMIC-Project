@@ -32,6 +32,10 @@ jobs:
         pip install -r requirements.txt
         pip install pyinstaller
 
+    - name: Write version to version.txt
+      run: |
+        echo "${{ github.ref_name }}" | sed 's/^v//' > version.txt
+
     - name: Build with PyInstaller
       run: |
         pyinstaller main.spec

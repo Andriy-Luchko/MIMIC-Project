@@ -5,9 +5,10 @@ a = Analysis(
     pathex=[],
     binaries=[],
     datas=[
+        ('version.txt', '.'),
+        ('updater.py', '.'),
         ('./sql_scripts/*', './sql_scripts/'),
         ('./config.yaml', './'),
-        ('./version.txt', './')
     ],
     hiddenimports=['psutil._psutil_windows', 'psutil._psutil_common', 'psutil'],
     hookspath=[],

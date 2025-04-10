@@ -8,6 +8,12 @@ altgraph==0.17.4
     # via
     #   macholib
     #   pyinstaller
+certifi==2025.1.31
+    # via requests
+charset-normalizer==3.4.1
+    # via requests
+idna==3.10
+    # via requests
 macholib==1.16.3
     # via pyinstaller
 numpy==2.2.3
@@ -36,12 +42,16 @@ pytz==2025.1
     # via pandas
 pyyaml==6.0.2
     # via -r requirements.in
+requests==2.32.3
+    # via -r requirements.in
 six==1.17.0
     # via python-dateutil
 tqdm==4.67.1
     # via -r requirements.in
 tzdata==2025.1
     # via pandas
+urllib3==2.3.0
+    # via requests
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools

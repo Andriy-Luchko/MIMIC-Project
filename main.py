@@ -13,7 +13,6 @@ from create_database_button import create_database_button
 from filter_search_bar import FilterSearchBar
 from return_column_search_bar import ReturnColumnSearchBar
 from canvas import Canvas
-from mei_cleanup import mei_lifecycle
 from to_spss_data import one_hot_encode_csv
 from update_checker import UpdateChecker
 
@@ -70,7 +69,7 @@ class EncoderWorker(QObject):
 class MainWindow(QMainWindow):
     def __init__(self, width, height):
         super().__init__()
-        self.setWindowTitle("MIMIC Query App")
+        self.setWindowTitle("MIMIC Query App LOCAL")
         self.setGeometry(0, 0, width, height)
 
         # Initialize variables
@@ -546,8 +545,6 @@ class MainWindow(QMainWindow):
         event.accept()
 
 def main():
-    mei_lifecycle()
-    
     app = QApplication(sys.argv)
     screen_rect = app.desktop().screenGeometry()
     window = MainWindow(screen_rect.width(), screen_rect.height())
@@ -569,7 +566,7 @@ def main():
     checker.update_available.connect(on_update_available)
 
     # Run check after app loads
-    QTimer.singleShot(2000, checker.check_for_update)
+    QTimer.singleShot(100, checker.check_for_update)
 
     sys.exit(app.exec_())
 
